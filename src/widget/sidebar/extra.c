@@ -460,14 +460,9 @@ static void draw_extra_info_panel(void)
     int y_offset = data.y_offset + EXTRA_INFO_VERTICAL_PADDING;
 
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_GAME_SPEED) {
-        y_offset += EXTRA_INFO_VERTICAL_PADDING;
-
-        lang_text_draw(45, 2, data.x_offset + 10, y_offset, FONT_NORMAL_WHITE);
-        y_offset += EXTRA_INFO_LINE_SPACE + EXTRA_INFO_VERTICAL_PADDING;
-
-        text_draw_percentage(data.game_speed, data.x_offset + 60, y_offset - 2, FONT_NORMAL_GREEN);
-
-        y_offset += EXTRA_INFO_VERTICAL_PADDING * 3;
+        lang_text_draw(45, 2, data.x_offset + 10, data.y_offset + 8, FONT_NORMAL_WHITE);
+        text_draw_percentage(data.game_speed, data.x_offset + 60, data.y_offset + 30, FONT_NORMAL_GREEN);
+        y_offset = data.y_offset + EXTRA_INFO_HEIGHT_GAME_SPEED;
     }
 
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_UNEMPLOYMENT) {
@@ -530,7 +525,7 @@ static void draw_extra_info_panel(void)
 
             font_t font = (city_god_wrath_bolts(i) > 0 || city_god_happiness(i) < 50) ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
 
-            int t_x = data.x_offset + 32;
+            int t_x = data.x_offset + 38;
             int small_w = text_draw_number(small_count, 0, "", t_x, y_offset, font, 0);
             int large_x = t_x + small_w + 14;
             int large_w = text_draw_number(large_count, 0, "", large_x, y_offset, font, 0);
@@ -539,7 +534,7 @@ static void draw_extra_info_panel(void)
             if (mood_idx > 10) {
                 mood_idx = 10;
             }
-            int mood_x = large_x + large_w + 8;
+            int mood_x = large_x + large_w + 3;
             int mood_width = lang_text_draw(59, 32 + mood_idx, mood_x, y_offset, font);
 
             if (city_god_wrath_bolts(i) > 0) {
