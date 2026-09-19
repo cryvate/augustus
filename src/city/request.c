@@ -11,6 +11,16 @@ int city_request_has_troop_request(void)
         && !city_military_distant_battle_roman_army_is_traveling_forth();
 }
 
+int city_request_troop_request_force_size(void)
+{
+    return city_military_distant_battle_enemy_strength();
+}
+
+int city_request_troop_request_months_left(void)
+{
+    return city_military_months_until_distant_battle();
+}
+
 int city_request_get_status(int index)
 {
     int num_requests = 0;

@@ -41,7 +41,7 @@
 
 #define EXTRA_INFO_LINE_SPACE 16
 #define EXTRA_INFO_VERTICAL_PADDING 8
-#define EXTRA_INFO_HEIGHT_GAME_SPEED 32
+#define EXTRA_INFO_HEIGHT_GAME_SPEED 64
 #define EXTRA_INFO_HEIGHT_UNEMPLOYMENT 32
 #define EXTRA_INFO_HEIGHT_INVASIONS 32
 #define EXTRA_INFO_HEIGHT_GODS 32
@@ -57,12 +57,12 @@ static void button_toggle_play_paused(int param1, int param2);
 static void button_handle_request(const generic_button *button);
 
 static arrow_button arrow_buttons_speed[] = {
-    {11, 8, 17, 24, button_game_speed, 1, 0},
-    {35, 8, 15, 24, button_game_speed, 0, 0},
+    {11, 30, 17, 24, button_game_speed, 1, 0},
+    {35, 30, 15, 24, button_game_speed, 0, 0},
 };
 
 static image_button play_paused_button = {
-    108, 7, 39, 26, IB_NORMAL, 0, 0, button_toggle_play_paused, button_none, 0, 0, 1, "UI", "Pause Button"
+    108, 29, 39, 26, IB_NORMAL, 0, 0, button_toggle_play_paused, button_none, 0, 0, 1, "UI", "Pause Button"
 };
 
 static generic_button buttons_emperor_requests[] = {
@@ -215,153 +215,96 @@ static int calculate_extra_info_height(int available_height)
         unsigned int num_requests = count_active_requests();
         data.visible_requests = 1;
         while (data.visible_requests < num_requests) {
-            if (height + EXTRA_INFO_HEIGHT_REQUESTS_PANEL > available_height) {
+            if (height + EXTRA_INFO_HEIGHT_REQUESTS_PANEL <= available_height) {
+                height += EXTRA_INFO_HEIGHT_REQUESTS_PANEL;
+                data.visible_requests++;
+            } else {
                 break;
             }
-            height += EXTRA_INFO_HEIGHT_REQUESTS_PANEL;
-            data.visible_requests++;
         }
     }
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_RATINGS) {
         height += EXTRA_INFO_HEIGHT_RATINGS;
     }
-
     return height;
 }
 
-static void set_extra_info_objectives(void)
+static int update_extra_info_value(int current, int *cached)
 {
-    data.objectives.culture.target = 0;
-    data.objectives.prosperity.target = 0;
-    data.objectives.peace.target = 0;
-    data.objectives.favor.target = 0;
-    data.objectives.population.target = 0;
-
-    if (scenario_is_open_play()) {
-        return;
-    }
-    if (scenario_criteria_culture_enabled()) {
-        data.objectives.culture.target = scenario_criteria_culture();
-    }
-    if (scenario_criteria_prosperity_enabled()) {
-        data.objectives.prosperity.target = scenario_criteria_prosperity();
-    }
-    if (scenario_criteria_peace_enabled()) {
-        data.objectives.peace.target = scenario_criteria_peace();
-    }
-    if (scenario_criteria_favor_enabled()) {
-        data.objectives.favor.target = scenario_criteria_favor();
-    }
-    if (scenario_criteria_population_enabled()) {
-        data.objectives.population.target = scenario_criteria_population();
-    }
-}
-
-static int count_happy_gods(void)
-{
-    int happy_gods = 0;
-    for (int god = 0; god < MAX_GODS; god++) {
-        if (city_god_happy_bolts(god) > 0) {
-            happy_gods++;
-        }
-    }
-    return happy_gods;
-}
-
-static int count_angry_gods(void)
-{
-    int angry_gods = 0;
-    for (int god = 0; god < 5; god++) {
-        if (city_god_wrath_bolts(god) > 0) {
-            angry_gods++;
-        }
-    }
-    return angry_gods;
-}
-
-static int is_stockpiled_changed(resource_type resource)
-{
-    return city_resource_is_stockpiled(resource);
-}
-
-static int update_extra_info_value(int value, int *field)
-{
-    if (value == *field) {
-        return 0;
-    } else {
-        *field = value;
+    if (current != *cached) {
+        *cached = current;
         return 1;
     }
+    return 0;
 }
 
 static int update_extra_info(int is_background)
 {
     int changed = 0;
+
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_GAME_SPEED) {
         changed |= update_extra_info_value(setting_game_speed(), &data.game_speed);
     }
+
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_UNEMPLOYMENT) {
         changed |= update_extra_info_value(city_labor_unemployment_percentage(), &data.unemployment.percentage);
-        changed |= update_extra_info_value(
-            city_labor_workers_unemployed() - city_labor_workers_needed(),
-            &data.unemployment.amount
-        );
+        changed |= update_extra_info_value(city_labor_workers_unemployed() - city_labor_workers_needed(), &data.unemployment.amount);
     }
+
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_INVASIONS) {
-        int next_invasion = 0;
-        if (!city_figures_total_invading_enemies()) {
-            next_invasion = scenario_invasion_get_years_remaining() + 1;
-        }
-        changed |= update_extra_info_value(next_invasion, &data.next_invasion);
+        changed |= update_extra_info_value(scenario_invasion_get_next(), &data.next_invasion);
     }
+
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_GODS) {
-        changed |= update_extra_info_value(count_happy_gods(), &data.gods.happy);
-        changed |= update_extra_info_value(count_angry_gods(), &data.gods.angry);
+        changed |= update_extra_info_value(city_gods_happy_count(), &data.gods.happy);
+        changed |= update_extra_info_value(city_gods_angry_count(), &data.gods.angry);
     }
+
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_REQUESTS) {
-        int new_requests = update_extra_info_value(count_active_requests(), (int *) &data.active_requests);
-        new_requests |= update_extra_info_value(city_request_has_troop_request(), &data.troop_requests);
+        int troop_requests = city_request_has_troop_request();
+        int requests_changed = update_extra_info_value(troop_requests, &data.troop_requests);
+        int scenario_requests = scenario_request_count_visible();
+        data.active_requests = troop_requests + scenario_requests;
 
-        if (data.troop_requests) {
-            changed |= update_extra_info_value(RESOURCE_TROOPS, &data.requests[0].resource);
-            changed |= update_extra_info_value(city_military_months_until_distant_battle(), &data.requests[0].time);
-            changed |= update_extra_info_value(city_military_distant_battle_enemy_strength(), &data.requests[0].amount);
-            changed |= update_extra_info_value(city_military_empire_service_legions(), &data.requests[0].available);
-            data.requests[0].index = 0;
+        if (!is_background) {
+            int request_offset = 0;
+            if (troop_requests) {
+                request *r = &data.requests[0];
+                r->index = 0;
+                r->resource = RESOURCE_TROOPS;
+                r->amount = city_request_troop_request_force_size();
+                r->available = 0;
+                r->time = city_request_troop_request_months_left();
+                r->stockpiled = 0;
+                request_offset = 1;
+            }
+            for (int i = 0; i < scenario_requests && i + request_offset < MAX_REQUESTS_TO_DISPLAY; i++) {
+                const scenario_request *sr = scenario_request_get_visible(i);
+                if (!sr) {
+                    continue;
+                }
+                request *r = &data.requests[i + request_offset];
+                r->index = i;
+                r->resource = sr->resource;
+                r->amount = sr->amount.requested;
+                r->available = sr->resource == RESOURCE_DENARII ? city_finance_treasury() :
+                    city_resource_get_amount_for_request(sr->resource, sr->amount.requested);
+                r->time = sr->months_to_comply;
+                r->stockpiled = city_resource_is_stockpiled(sr->resource);
+            }
+            qsort(&data.requests[request_offset], scenario_requests, sizeof(request), sort_requests);
         }
-        int other_requests = data.active_requests - data.troop_requests;
-        int must_resort = 0;
-        for (int i = 0; i < other_requests; i++) {
-            request *slot = &data.requests[i + data.troop_requests];
-            if (new_requests) {
-                slot->index = i;
-            }
-            const scenario_request *r = scenario_request_get_visible(slot->index);
-            changed |= update_extra_info_value(r->resource, &slot->resource);
-            if (r->months_to_comply > slot->time) {
-                must_resort = 1;
-            }
-            changed |= update_extra_info_value(r->months_to_comply, &slot->time);
-            changed |= update_extra_info_value(r->amount.requested, &slot->amount);
-            if (r->resource == RESOURCE_DENARII) {
-                changed |= update_extra_info_value(city_finance_treasury(), &slot->available);
-            } else {
-                changed |= update_extra_info_value(city_resource_get_amount_including_granaries(r->resource,
-                    r->amount.requested, 0, 1), &slot->available);
-            }
 
-            changed |= update_extra_info_value(is_stockpiled_changed(r->resource), &slot->stockpiled);
-        }
-        if (new_requests || must_resort) {
-            qsort(data.requests + data.troop_requests, other_requests, sizeof(request), sort_requests);
-            changed = 1;
-        }
+        changed |= requests_changed;
     }
 
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_RATINGS) {
-        if (is_background) {
-            set_extra_info_objectives();
-        }
+        data.objectives.culture.target = scenario_criteria_culture();
+        data.objectives.prosperity.target = scenario_criteria_prosperity();
+        data.objectives.peace.target = scenario_criteria_peace();
+        data.objectives.favor.target = scenario_criteria_favor();
+        data.objectives.population.target = scenario_criteria_population();
+
         changed |= update_extra_info_value(city_rating_culture(), &data.objectives.culture.value);
         changed |= update_extra_info_value(city_rating_prosperity(), &data.objectives.prosperity.value);
         changed |= update_extra_info_value(city_rating_peace(), &data.objectives.peace.value);
@@ -526,10 +469,12 @@ static void draw_extra_info_panel(void)
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_GAME_SPEED) {
         y_offset += EXTRA_INFO_VERTICAL_PADDING;
 
-        int w = lang_text_draw(45, 2, data.x_offset + 10, y_offset, FONT_NORMAL_WHITE);
-        text_draw_percentage(data.game_speed, data.x_offset + 10 + w + 4, y_offset, FONT_NORMAL_GREEN);
-
+        lang_text_draw(45, 2, data.x_offset + 10, y_offset, FONT_NORMAL_WHITE);
         y_offset += EXTRA_INFO_LINE_SPACE + EXTRA_INFO_VERTICAL_PADDING;
+
+        text_draw_percentage(data.game_speed, data.x_offset + 60, y_offset - 2, FONT_NORMAL_GREEN);
+
+        y_offset += EXTRA_INFO_VERTICAL_PADDING * 3;
     }
 
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_UNEMPLOYMENT) {
@@ -758,7 +703,6 @@ static void button_toggle_play_paused(int param1, int param2)
 {
     game_state_toggle_paused();
 }
-
 
 static void confirm_nothing(int accepted, int checked)
 {}

@@ -3,6 +3,7 @@
 #include "building/destruction.h"
 #include "core/array.h"
 #include "city/emperor.h"
+#include "city/figures.h"
 #include "city/message.h"
 #include "core/calc.h"
 #include "core/log.h"
@@ -265,6 +266,23 @@ int scenario_invasion_get_years_remaining(void)
         }
     }
     return years_until_invasion != 4 ? years_until_invasion : 0;
+}
+
+int scenario_invasion_get_next(void)
+{
+    if (city_figures_enemies() || city_figures_attacking_natives()) {
+        return 0;
+    }
+    int years = scenario_invasion_get_years_remaining();
+    if (years == 0) {
+        return 1;
+    } else if (years == 1) {
+        return 2;
+    } else if (years == 2) {
+        return 3;
+    } else {
+        return 4;
+    }
 }
 
 void scenario_invasion_foreach_warning(void (*callback)(int x, int y, int image_id))
