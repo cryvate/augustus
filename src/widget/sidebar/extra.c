@@ -34,6 +34,7 @@
 #include "scenario/property.h"
 #include "scenario/request.h"
 #include "translation/translation.h"
+#include "widget/sidebar/common.h"
 #include "window/advisor/imperial.h"
 #include "window/empire.h"
 #include "window/popup_dialog.h"
@@ -595,8 +596,12 @@ int sidebar_extra_draw_background(int x_offset, int y_offset, int width, int ava
     data.info_to_display = calculate_displayable_info(info_to_display, available_height);
     data.available_height = available_height;
     int content_height = calculate_extra_info_height(available_height);
-    int full_panel_height = ((available_height - 120) / BLOCK_SIZE) * BLOCK_SIZE;
-    data.height = full_panel_height > content_height ? full_panel_height : content_height;
+
+    int target_height = (SIDEBAR_FILLER_Y_OFFSET - y_offset) / BLOCK_SIZE * BLOCK_SIZE;
+    if (available_height < target_height) {
+        target_height = available_height / BLOCK_SIZE * BLOCK_SIZE;
+    }
+    data.height = target_height > content_height ? target_height : content_height;
 
     if (data.info_to_display != SIDEBAR_EXTRA_DISPLAY_NONE) {
         update_extra_info(1);
