@@ -42,13 +42,13 @@
 
 #define EXTRA_INFO_LINE_SPACE 16
 #define EXTRA_INFO_VERTICAL_PADDING 2
-#define EXTRA_INFO_HEIGHT_GAME_SPEED 52
-#define EXTRA_INFO_HEIGHT_UNEMPLOYMENT 18
-#define EXTRA_INFO_HEIGHT_INVASIONS 18
-#define EXTRA_INFO_HEIGHT_GODS 82
+#define EXTRA_INFO_HEIGHT_GAME_SPEED 64
+#define EXTRA_INFO_HEIGHT_UNEMPLOYMENT 20
+#define EXTRA_INFO_HEIGHT_INVASIONS 36
+#define EXTRA_INFO_HEIGHT_GODS 84
 #define EXTRA_INFO_HEIGHT_RATINGS 98
 #define EXTRA_INFO_HEIGHT_REQUESTS_PANEL 40
-#define EXTRA_INFO_HEIGHT_REQUESTS_MIN 20
+#define EXTRA_INFO_HEIGHT_REQUESTS_MIN 24
 
 #define MAX_REQUESTS_TO_DISPLAY 5
 #define REQUEST_MONTHS_LEFT_FOR_RED_WARNING 3
@@ -311,7 +311,7 @@ static int draw_extra_info_objective(
 {
     int text_width = 0;
     if (text_group == 4 && text_id == 6) {
-        text_width = text_draw((const uint8_t *) "Pop", x_offset + 11, y_offset, FONT_NORMAL_WHITE, 0);
+        text_width = text_draw((const uint8_t *) "Pop", x_offset + 10, y_offset, FONT_NORMAL_WHITE, 0);
     } else if (cut_off_at_parenthesis) {
         // Exception for Chinese: the string for "population" includes the hotkey " (6)"
         // To fix that: cut the string off at the '('
@@ -323,14 +323,14 @@ static int draw_extra_info_objective(
                 break;
             }
         }
-        text_width = text_draw(tmp, x_offset + 11, y_offset, FONT_NORMAL_WHITE, 0);
+        text_width = text_draw(tmp, x_offset + 10, y_offset, FONT_NORMAL_WHITE, 0);
     } else {
-        text_width = lang_text_draw(text_group, text_id, x_offset + 11, y_offset, FONT_NORMAL_WHITE);
+        text_width = lang_text_draw(text_group, text_id, x_offset + 10, y_offset, FONT_NORMAL_WHITE);
     }
-    text_width += text_draw((const uint8_t *) ": ", x_offset + 11 + text_width, y_offset, FONT_NORMAL_WHITE, 0);
+    text_width += text_draw((const uint8_t *) ":", x_offset + 10 + text_width, y_offset, FONT_NORMAL_WHITE, 0);
     font_t font = obj->value >= obj->target ? FONT_NORMAL_GREEN : FONT_NORMAL_RED;
-    int width = text_draw_number(obj->value, '@', "", x_offset + 11 + text_width, y_offset, font, 0);
-    text_draw_number(obj->target, '(', ")", x_offset + 11 + text_width + width, y_offset, font, 0);
+    int width = text_draw_number(obj->value, '@', "", x_offset + 10 + text_width, y_offset, font, 0);
+    text_draw_number(obj->target, '(', ")", x_offset + 10 + text_width + width, y_offset, font, 0);
     return EXTRA_INFO_LINE_SPACE;
 }
 
@@ -460,14 +460,14 @@ static void draw_extra_info_panel(void)
     int y_offset = data.y_offset + EXTRA_INFO_VERTICAL_PADDING;
 
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_GAME_SPEED) {
-        y_offset += 2;
+        y_offset += EXTRA_INFO_VERTICAL_PADDING;
 
         lang_text_draw(45, 2, data.x_offset + 10, y_offset, FONT_NORMAL_WHITE);
-        y_offset += EXTRA_INFO_LINE_SPACE;
+        y_offset += EXTRA_INFO_LINE_SPACE + EXTRA_INFO_VERTICAL_PADDING;
 
         text_draw_percentage(data.game_speed, data.x_offset + 60, y_offset - 2, FONT_NORMAL_GREEN);
 
-        y_offset += EXTRA_INFO_LINE_SPACE + 2;
+        y_offset += EXTRA_INFO_VERTICAL_PADDING * 3;
     }
 
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_UNEMPLOYMENT) {
@@ -485,12 +485,14 @@ static void draw_extra_info_panel(void)
         y_offset += 2;
 
         int w = text_draw(translation_for(TR_SIDEBAR_EXTRA_INVASIONS), data.x_offset + 10, y_offset, FONT_NORMAL_WHITE, 0);
-        w += text_draw((const uint8_t *) ": ", data.x_offset + 10 + w, y_offset, FONT_NORMAL_WHITE, 0);
+        text_draw((const uint8_t *) ":", data.x_offset + 10 + w, y_offset, FONT_NORMAL_WHITE, 0);
+
+        y_offset += EXTRA_INFO_LINE_SPACE;
 
         font_t font_type = data.next_invasion == 0 || data.next_invasion == 2 ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
 
         text_draw_centered(translation_for(TR_SIDEBAR_EXTRA_INVASION_UNDERWAY + data.next_invasion),
-            data.x_offset + 10 + w, y_offset, data.width - (data.x_offset + 10 + w) - 4, font_type, 0);
+            data.x_offset, y_offset, data.width, font_type, 0);
 
         y_offset += EXTRA_INFO_LINE_SPACE + 2;
     }
@@ -526,21 +528,24 @@ static void draw_extra_info_panel(void)
 
             text_draw((const uint8_t *) god_short_names[i], data.x_offset + 10, y_offset, FONT_NORMAL_WHITE, 0);
 
-            int t_x = data.x_offset + 30;
-            t_x += text_draw_number(small_count, 0, " ", t_x, y_offset, FONT_NORMAL_WHITE, 0);
-            text_draw_number(large_count, 0, "", t_x, y_offset, FONT_NORMAL_WHITE, 0);
-
             font_t font = (city_god_wrath_bolts(i) > 0 || city_god_happiness(i) < 50) ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
+
+            int t_x = data.x_offset + 32;
+            int small_w = text_draw_number(small_count, 0, "", t_x, y_offset, font, 0);
+            int large_x = t_x + small_w + 14;
+            int large_w = text_draw_number(large_count, 0, "", large_x, y_offset, font, 0);
+
             int mood_idx = city_god_happiness(i) / 10;
             if (mood_idx > 10) {
                 mood_idx = 10;
             }
-            int mood_width = lang_text_draw(59, 32 + mood_idx, data.x_offset + 56, y_offset, font);
+            int mood_x = large_x + large_w + 8;
+            int mood_width = lang_text_draw(59, 32 + mood_idx, mood_x, y_offset, font);
 
             if (city_god_wrath_bolts(i) > 0) {
-                image_draw(image_group(GROUP_GOD_BOLT), data.x_offset + 56 + mood_width + 2, y_offset - 2, COLOR_MASK_NONE, SCALE_NONE);
+                image_draw(image_group(GROUP_GOD_BOLT), mood_x + mood_width + 2, y_offset - 2, COLOR_MASK_NONE, SCALE_NONE);
             } else if (city_god_happy_bolts(i) > 0) {
-                image_draw(happy_image_id, data.x_offset + 56 + mood_width + 2, y_offset - 2, COLOR_MASK_NONE, SCALE_NONE);
+                image_draw(happy_image_id, mood_x + mood_width + 2, y_offset - 2, COLOR_MASK_NONE, SCALE_NONE);
             }
 
             y_offset += EXTRA_INFO_LINE_SPACE;
@@ -563,9 +568,9 @@ static void draw_extra_info_panel(void)
         int employee_shortfall = abs(data.unemployment.amount);
         font_t font = ((data.unemployment.amount < 0) && (city_population_open_housing_capacity() < employee_shortfall))
             ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
-        int width = text_draw((const uint8_t *) "Room", data.x_offset + 11, y_offset, font, 0);
-        width += text_draw((const uint8_t *) ": ", data.x_offset + 11 + width, y_offset, font, 0);
-        text_draw_number(city_population_open_housing_capacity(), 0, "", data.x_offset + 11 + width, y_offset, font, 0);
+        int width = text_draw((const uint8_t *) "Room", data.x_offset + 10, y_offset, font, 0);
+        width += text_draw((const uint8_t *) ":", data.x_offset + 10 + width, y_offset, font, 0);
+        text_draw_number(city_population_open_housing_capacity(), 0, "", data.x_offset + 10 + width, y_offset, font, 0);
         y_offset += EXTRA_INFO_LINE_SPACE + 2;
     }
 
