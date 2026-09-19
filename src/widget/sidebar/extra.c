@@ -1,6 +1,7 @@
 #include "extra.h"
 
 #include "assets/assets.h"
+#include "building/count.h"
 #include "city/figures.h"
 #include "city/finance.h"
 #include "city/gods.h"
@@ -44,7 +45,7 @@
 #define EXTRA_INFO_HEIGHT_GAME_SPEED 64
 #define EXTRA_INFO_HEIGHT_UNEMPLOYMENT 32
 #define EXTRA_INFO_HEIGHT_INVASIONS 32
-#define EXTRA_INFO_HEIGHT_GODS 32
+#define EXTRA_INFO_HEIGHT_GODS 88
 #define EXTRA_INFO_HEIGHT_RATINGS 112
 #define EXTRA_INFO_HEIGHT_REQUESTS_PANEL 48
 #define EXTRA_INFO_HEIGHT_REQUESTS_MIN EXTRA_INFO_LINE_SPACE + EXTRA_INFO_HEIGHT_REQUESTS_PANEL
@@ -507,22 +508,54 @@ static void draw_extra_info_panel(void)
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_GODS) {
         y_offset += EXTRA_INFO_VERTICAL_PADDING;
 
-        int w = text_draw(translation_for(TR_SIDEBAR_EXTRA_GODS), data.x_offset + 10, y_offset, FONT_NORMAL_WHITE, 0);
-        w += text_draw((const uint8_t *) ": ", data.x_offset + 10 + w, y_offset, FONT_NORMAL_WHITE, 0);
-
-        font_t font_type = data.gods.angry > 0 ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
-        int width = text_draw_number(data.gods.angry, 0, "", data.x_offset + 10 + w, y_offset + 2, font_type, 0);
-        image_draw(image_group(GROUP_GOD_BOLT), data.x_offset + 10 + w + width, y_offset - 2, COLOR_MASK_NONE, SCALE_NONE);
+        static const building_type god_small_temples[MAX_GODS] = {
+            BUILDING_SMALL_TEMPLE_CERES, BUILDING_SMALL_TEMPLE_NEPTUNE,
+            BUILDING_SMALL_TEMPLE_MERCURY, BUILDING_SMALL_TEMPLE_MARS,
+            BUILDING_SMALL_TEMPLE_VENUS
+        };
+        static const building_type god_large_temples[MAX_GODS] = {
+            BUILDING_LARGE_TEMPLE_CERES, BUILDING_LARGE_TEMPLE_NEPTUNE,
+            BUILDING_LARGE_TEMPLE_MERCURY, BUILDING_LARGE_TEMPLE_MARS,
+            BUILDING_LARGE_TEMPLE_VENUS
+        };
+        static const building_type god_grand_temples[MAX_GODS] = {
+            BUILDING_GRAND_TEMPLE_CERES, BUILDING_GRAND_TEMPLE_NEPTUNE,
+            BUILDING_GRAND_TEMPLE_MERCURY, BUILDING_GRAND_TEMPLE_MARS,
+            BUILDING_GRAND_TEMPLE_VENUS
+        };
 
         static int happy_image_id;
         if (!happy_image_id) {
             happy_image_id = assets_get_image_id("UI", "Happy God Icon");
         }
-        int h_x = data.x_offset + 10 + w + width + 24;
-        width = text_draw_number(data.gods.happy, 0, "", h_x, y_offset + 2, FONT_NORMAL_GREEN, 0);
-        image_draw(happy_image_id, h_x + width, y_offset - 2, COLOR_MASK_NONE, SCALE_NONE);
 
-        y_offset += EXTRA_INFO_LINE_SPACE + EXTRA_INFO_VERTICAL_PADDING;
+        for (int i = 0; i < MAX_GODS; i++) {
+            int small_count = building_count_active(god_small_temples[i]);
+            int large_count = building_count_active(god_large_temples[i]) + building_count_active(god_grand_temples[i]);
+
+            lang_text_draw(59, 11 + i, data.x_offset + 10, y_offset, FONT_NORMAL_WHITE);
+
+            int t_x = data.x_offset + 62;
+            t_x += text_draw_number(small_count, 0, " ", t_x, y_offset, FONT_NORMAL_WHITE, 0);
+            text_draw_number(large_count, 0, "", t_x, y_offset, FONT_NORMAL_WHITE, 0);
+
+            font_t font = (city_god_wrath_bolts(i) > 0 || city_god_happiness(i) < 50) ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
+            int mood_idx = city_god_happiness(i) / 10;
+            if (mood_idx > 10) {
+                mood_idx = 10;
+            }
+            int mood_width = lang_text_draw(59, 32 + mood_idx, data.x_offset + 92, y_offset, font);
+
+            if (city_god_wrath_bolts(i) > 0) {
+                image_draw(image_group(GROUP_GOD_BOLT), data.x_offset + 92 + mood_width + 2, y_offset - 2, COLOR_MASK_NONE, SCALE_NONE);
+            } else if (city_god_happy_bolts(i) > 0) {
+                image_draw(happy_image_id, data.x_offset + 92 + mood_width + 2, y_offset - 2, COLOR_MASK_NONE, SCALE_NONE);
+            }
+
+            y_offset += EXTRA_INFO_LINE_SPACE;
+        }
+
+        y_offset += EXTRA_INFO_VERTICAL_PADDING;
     }
 
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_RATINGS) {
