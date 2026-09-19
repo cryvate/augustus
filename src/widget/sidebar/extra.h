@@ -96,4 +96,38 @@ static inline const char *sidebar_extra_short_migration_status(int enemies, int 
     }
 }
 
+#include <stdio.h>
+
+/**
+ * Concise 3-letter god mood string for the sidebar extra info panel.
+ */
+static inline const char *sidebar_extra_short_god_mood(int mood_idx)
+{
+    static const char *short_moods[] = {
+        "Wra", "Wra", "Ang", "Unh", "Dis", "Con", "Ple", "Ple", "Hap", "Hap", "Exa"
+    };
+    if (mood_idx < 0) {
+        return "Wra";
+    }
+    if (mood_idx > 10) {
+        return "Exa";
+    }
+    return short_moods[mood_idx];
+}
+
+/**
+ * Concise festival age string for a god in the sidebar extra info panel.
+ */
+static inline const char *sidebar_extra_short_god_festival_months(int months_since, char *buffer, size_t buffer_size)
+{
+    if (months_since <= 0) {
+        return "0m";
+    }
+    if (months_since > 99) {
+        return ">99m";
+    }
+    snprintf(buffer, buffer_size, "%dm", months_since);
+    return buffer;
+}
+
 #endif // WIDGET_SIDEBAR_FILLER_H

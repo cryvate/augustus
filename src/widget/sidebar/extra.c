@@ -47,16 +47,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define EXTRA_INFO_LINE_SPACE 16
-#define EXTRA_INFO_VERTICAL_PADDING 2
-#define EXTRA_INFO_HEIGHT_GAME_SPEED 38
-#define EXTRA_INFO_HEIGHT_UNEMPLOYMENT 42
-#define EXTRA_INFO_HEIGHT_INVASIONS 36
-#define EXTRA_INFO_HEIGHT_GODS 84
-#define EXTRA_INFO_HEIGHT_RATINGS 98
-#define EXTRA_INFO_HEIGHT_SUMMARY_TEXT 36
-#define EXTRA_INFO_HEIGHT_REQUESTS_PANEL 40
-#define EXTRA_INFO_HEIGHT_REQUESTS_MIN 24
+#define EXTRA_INFO_LINE_SPACE 14
+#define EXTRA_INFO_VERTICAL_PADDING 1
+#define EXTRA_INFO_HEIGHT_GAME_SPEED 34
+#define EXTRA_INFO_HEIGHT_UNEMPLOYMENT 36
+#define EXTRA_INFO_HEIGHT_INVASIONS 0
+#define EXTRA_INFO_HEIGHT_GODS 72
+#define EXTRA_INFO_HEIGHT_RATINGS 86
+#define EXTRA_INFO_HEIGHT_SUMMARY_TEXT 30
+#define EXTRA_INFO_HEIGHT_REQUESTS_PANEL 36
+#define EXTRA_INFO_HEIGHT_REQUESTS_MIN 20
 
 #define MAX_REQUESTS_TO_DISPLAY 5
 #define REQUEST_MONTHS_LEFT_FOR_RED_WARNING 3
@@ -501,24 +501,8 @@ static void draw_extra_info_panel(void)
         y_offset += 20 + 2;
     }
 
-    if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_INVASIONS) {
-        y_offset += 2;
-
-        int w = text_draw(translation_for(TR_SIDEBAR_EXTRA_INVASIONS), data.x_offset + 10, y_offset, FONT_NORMAL_WHITE, 0);
-        text_draw((const uint8_t *) ":", data.x_offset + 10 + w, y_offset, FONT_NORMAL_WHITE, 0);
-
-        y_offset += EXTRA_INFO_LINE_SPACE;
-
-        font_t font_type = data.next_invasion == 0 || data.next_invasion == 2 ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
-
-        text_draw_centered(translation_for(TR_SIDEBAR_EXTRA_INVASION_UNDERWAY + data.next_invasion),
-            data.x_offset, y_offset, data.width, font_type, 0);
-
-        y_offset += EXTRA_INFO_LINE_SPACE + 2;
-    }
-
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_GODS) {
-        y_offset += 2;
+        y_offset += 1;
 
         static const char *god_short_names[MAX_GODS] = { "Ce", "Ne", "Me", "Ma", "Ve" };
         static const building_type god_small_temples[MAX_GODS] = {
@@ -550,28 +534,34 @@ static void draw_extra_info_panel(void)
 
             font_t font = (city_god_wrath_bolts(i) > 0 || city_god_happiness(i) < 50) ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
 
-            int t_x = data.x_offset + 38;
+            int t_x = data.x_offset + 30;
             int small_w = text_draw_number(small_count, 0, " ", t_x, y_offset, font, 0);
             int large_x = t_x + small_w;
             int large_w = text_draw_number(large_count, 0, " ", large_x, y_offset, font, 0);
 
             int mood_idx = city_god_happiness(i) / 10;
-            if (mood_idx > 10) {
-                mood_idx = 10;
-            }
+            const char *mood_str = sidebar_extra_short_god_mood(mood_idx);
             int mood_x = large_x + large_w;
-            int mood_width = lang_text_draw(59, 32 + mood_idx, mood_x, y_offset, font);
+            int mood_w = text_draw((const uint8_t *) mood_str, mood_x, y_offset, font, 0);
 
+            int months_since = city_god_months_since_festival(i);
+            char fest_buf[12];
+            const char *fest_str = sidebar_extra_short_god_festival_months(months_since, fest_buf, sizeof(fest_buf));
+            font_t fest_font = (months_since >= 12) ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
+            int fest_x = mood_x + mood_w + 4;
+            int fest_w = text_draw((const uint8_t *) fest_str, fest_x, y_offset, fest_font, 0);
+
+            int icon_x = fest_x + fest_w + 4;
             if (city_god_wrath_bolts(i) > 0) {
-                image_draw(image_group(GROUP_GOD_BOLT), mood_x + mood_width + 2, y_offset - 2, COLOR_MASK_NONE, SCALE_NONE);
+                image_draw(image_group(GROUP_GOD_BOLT), icon_x, y_offset - 2, COLOR_MASK_NONE, SCALE_NONE);
             } else if (city_god_happy_bolts(i) > 0) {
-                image_draw(happy_image_id, mood_x + mood_width + 2, y_offset - 2, COLOR_MASK_NONE, SCALE_NONE);
+                image_draw(happy_image_id, icon_x, y_offset - 2, COLOR_MASK_NONE, SCALE_NONE);
             }
 
             y_offset += EXTRA_INFO_LINE_SPACE;
         }
 
-        y_offset += 2;
+        y_offset += 1;
     }
 
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_RATINGS) {
