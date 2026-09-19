@@ -319,7 +319,9 @@ static int draw_extra_info_objective(
     int x_offset, int y_offset, int text_group, int text_id, objective *obj, int cut_off_at_parenthesis)
 {
     int text_width = 0;
-    if (cut_off_at_parenthesis) {
+    if (text_group == 4 && text_id == 6) {
+        text_width = text_draw((const uint8_t *) "Pop", x_offset + 11, y_offset, FONT_NORMAL_WHITE, 0);
+    } else if (cut_off_at_parenthesis) {
         // Exception for Chinese: the string for "population" includes the hotkey " (6)"
         // To fix that: cut the string off at the '('
         uint8_t tmp[100];
@@ -480,13 +482,10 @@ static void draw_extra_info_panel(void)
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_UNEMPLOYMENT) {
         y_offset += EXTRA_INFO_VERTICAL_PADDING;
 
-        int w = lang_text_draw(68, 148, data.x_offset + 10, y_offset, FONT_NORMAL_WHITE);
-        w += text_draw((const uint8_t *) ": ", data.x_offset + 10 + w, y_offset, FONT_NORMAL_WHITE, 0);
-
         int text_width = text_draw_percentage(data.unemployment.percentage,
-            data.x_offset + 10 + w, y_offset, FONT_NORMAL_GREEN);
+            data.x_offset + 10, y_offset, FONT_NORMAL_GREEN);
         text_draw_number(data.unemployment.amount, '(', ")",
-            data.x_offset + 10 + w + text_width, y_offset, FONT_NORMAL_GREEN, 0);
+            data.x_offset + 10 + text_width, y_offset, FONT_NORMAL_GREEN, 0);
 
         y_offset += EXTRA_INFO_LINE_SPACE + EXTRA_INFO_VERTICAL_PADDING;
     }
@@ -540,7 +539,7 @@ static void draw_extra_info_panel(void)
         int employee_shortfall = abs(data.unemployment.amount);
         font_t font = ((data.unemployment.amount < 0) && (city_population_open_housing_capacity() < employee_shortfall))
             ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
-        int width = lang_text_draw(CUSTOM_TRANSLATION, TR_SIDEBAR_EXTRA_HOUSING_AVAILABLE, data.x_offset + 11, y_offset, font);
+        int width = text_draw((const uint8_t *) "Room", data.x_offset + 11, y_offset, font, 0);
         width += text_draw((const uint8_t *) ": ", data.x_offset + 11 + width, y_offset, font, 0);
         text_draw_number(city_population_open_housing_capacity(), 0, "", data.x_offset + 11 + width, y_offset, font, 0);
         y_offset += EXTRA_INFO_LINE_SPACE + EXTRA_INFO_VERTICAL_PADDING;
