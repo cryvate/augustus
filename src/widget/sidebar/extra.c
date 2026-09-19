@@ -13,10 +13,12 @@
 #include "city/request.h"
 #include "city/resource.h"
 #include "core/config.h"
+#include "core/dir.h"
 #include "core/image_group.h"
 #include "core/lang.h"
 #include "core/string.h"
 #include "figure/formation_legion.h"
+#include "game/file.h"
 #include "game/resource.h"
 #include "game/settings.h"
 #include "game/state.h"
@@ -38,14 +40,17 @@
 #include "widget/sidebar/common.h"
 #include "window/advisor/imperial.h"
 #include "window/empire.h"
+#include "window/file_dialog.h"
 #include "window/popup_dialog.h"
 
+#include <ctype.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define EXTRA_INFO_LINE_SPACE 16
 #define EXTRA_INFO_VERTICAL_PADDING 2
 #define EXTRA_INFO_HEIGHT_GAME_SPEED 38
-#define EXTRA_INFO_HEIGHT_UNEMPLOYMENT 20
+#define EXTRA_INFO_HEIGHT_UNEMPLOYMENT 42
 #define EXTRA_INFO_HEIGHT_INVASIONS 36
 #define EXTRA_INFO_HEIGHT_GODS 84
 #define EXTRA_INFO_HEIGHT_RATINGS 98
@@ -59,6 +64,10 @@
 static void button_game_speed(int is_down, int param2);
 static void button_toggle_play_paused(int param1, int param2);
 static void button_handle_request(const generic_button *button);
+static void button_normal_load(const generic_button *button);
+static void button_quick_load(const generic_button *button);
+static void button_quick_save(const generic_button *button);
+static void button_normal_save(const generic_button *button);
 
 static arrow_button arrow_buttons_speed[] = {
     {11, 7, 17, 24, button_game_speed, 1, 0},
@@ -67,6 +76,13 @@ static arrow_button arrow_buttons_speed[] = {
 
 static image_button play_paused_button = {
     108, 6, 39, 26, IB_NORMAL, 0, 0, button_toggle_play_paused, button_none, 0, 0, 1, "UI", "Pause Button"
+};
+
+static generic_button quick_buttons[] = {
+    {10, 0, 32, 20, button_normal_load},
+    {46, 0, 32, 20, button_quick_load},
+    {82, 0, 32, 20, button_quick_save},
+    {118, 0, 32, 20, button_normal_save}
 };
 
 static generic_button buttons_emperor_requests[] = {
@@ -123,7 +139,9 @@ static struct {
     int troop_requests;
     int objectives_y_offset;
     int request_buttons_y_offset;
+    int unemployment_buttons_y_offset;
     unsigned int focused_request_button_id;
+    unsigned int focused_quick_button_id;
     unsigned int selected_request_id;
     unsigned int selected_resource;
     request requests[MAX_REQUESTS_TO_DISPLAY];
@@ -336,19 +354,6 @@ static int draw_extra_info_objective(
     font_t font = obj->value >= obj->target ? FONT_NORMAL_GREEN : FONT_NORMAL_RED;
     int width = text_draw_number(obj->value, '@', "", x_offset + 10 + text_width, y_offset, font, 0);
 
-    if (text_group == 53 && text_id == 2) {
-        char trend_str[2] = { '=', 0 };
-        int exp = city_rating_explanation_for(SELECTED_RATING_PROSPERITY);
-        if (city_rating_prosperity() >= city_ratings_prosperity_max() || exp == 1) {
-            trend_str[0] = '=';
-        } else if (exp == 2) {
-            trend_str[0] = '+';
-        } else {
-            trend_str[0] = '-';
-        }
-        width += text_draw((const uint8_t *) trend_str, x_offset + 10 + text_width + width, y_offset, font, 0);
-    }
-
     text_draw_number(obj->target, '(', ")", x_offset + 10 + text_width + width, y_offset, font, 0);
     return EXTRA_INFO_LINE_SPACE;
 }
@@ -492,6 +497,8 @@ static void draw_extra_info_panel(void)
             data.x_offset + 10 + text_width, y_offset, FONT_NORMAL_GREEN, 0);
 
         y_offset += EXTRA_INFO_LINE_SPACE + 2;
+        data.unemployment_buttons_y_offset = y_offset;
+        y_offset += 20 + 2;
     }
 
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_INVASIONS) {
@@ -544,15 +551,15 @@ static void draw_extra_info_panel(void)
             font_t font = (city_god_wrath_bolts(i) > 0 || city_god_happiness(i) < 50) ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
 
             int t_x = data.x_offset + 38;
-            int small_w = text_draw_number(small_count, 0, "", t_x, y_offset, font, 0);
-            int large_x = t_x + small_w + 6;
-            int large_w = text_draw_number(large_count, 0, "", large_x, y_offset, font, 0);
+            int small_w = text_draw_number(small_count, 0, " ", t_x, y_offset, font, 0);
+            int large_x = t_x + small_w;
+            int large_w = text_draw_number(large_count, 0, " ", large_x, y_offset, font, 0);
 
             int mood_idx = city_god_happiness(i) / 10;
             if (mood_idx > 10) {
                 mood_idx = 10;
             }
-            int mood_x = large_x + large_w + 8;
+            int mood_x = large_x + large_w;
             int mood_width = lang_text_draw(59, 32 + mood_idx, mood_x, y_offset, font);
 
             if (city_god_wrath_bolts(i) > 0) {
@@ -665,6 +672,19 @@ static void draw_extra_info_buttons(void)
         arrow_buttons_draw(data.x_offset, data.y_offset, arrow_buttons_speed, 2);
         image_buttons_draw(data.x_offset, data.y_offset, &play_paused_button, 1);
     }
+    if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_UNEMPLOYMENT) {
+        button_border_draw(data.x_offset + 10, data.unemployment_buttons_y_offset, 32, 20, data.focused_quick_button_id == 1);
+        text_draw_centered((const uint8_t *) "L", data.x_offset + 10, data.unemployment_buttons_y_offset + 2, 32, FONT_NORMAL_GREEN, 0);
+
+        button_border_draw(data.x_offset + 46, data.unemployment_buttons_y_offset, 32, 20, data.focused_quick_button_id == 2);
+        text_draw_centered((const uint8_t *) "QL", data.x_offset + 46, data.unemployment_buttons_y_offset + 2, 32, FONT_NORMAL_GREEN, 0);
+
+        button_border_draw(data.x_offset + 82, data.unemployment_buttons_y_offset, 32, 20, data.focused_quick_button_id == 3);
+        text_draw_centered((const uint8_t *) "QS", data.x_offset + 82, data.unemployment_buttons_y_offset + 2, 32, FONT_NORMAL_GREEN, 0);
+
+        button_border_draw(data.x_offset + 118, data.unemployment_buttons_y_offset, 32, 20, data.focused_quick_button_id == 4);
+        text_draw_centered((const uint8_t *) "S", data.x_offset + 118, data.unemployment_buttons_y_offset + 2, 32, FONT_NORMAL_GREEN, 0);
+    }
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_REQUESTS && data.active_requests) {
         for (unsigned int i = 0; i < data.visible_requests; i++) {
             button_border_draw(data.x_offset + 2, data.request_buttons_y_offset + buttons_emperor_requests[i].y,
@@ -694,9 +714,21 @@ static const uint8_t *get_population_tooltip(void)
 
 int sidebar_extra_handle_mouse(const mouse *m)
 {
+    if (data.is_collapsed || data.info_to_display == SIDEBAR_EXTRA_DISPLAY_NONE) {
+        return 0;
+    }
+    if (m->x < data.x_offset || m->x >= data.x_offset + data.width ||
+        m->y < data.y_offset || m->y >= data.y_offset + data.height) {
+        return 0;
+    }
     if ((data.info_to_display & SIDEBAR_EXTRA_DISPLAY_GAME_SPEED) &&
         (arrow_buttons_handle_mouse(m, data.x_offset, data.y_offset, arrow_buttons_speed, 2, 0) ||
             image_buttons_handle_mouse(m, data.x_offset, data.y_offset, &play_paused_button, 1, 0))) {
+        return 1;
+    }
+    if ((data.info_to_display & SIDEBAR_EXTRA_DISPLAY_UNEMPLOYMENT) &&
+        generic_buttons_handle_mouse(m, data.x_offset, data.unemployment_buttons_y_offset,
+            quick_buttons, 4, &data.focused_quick_button_id)) {
         return 1;
     }
     if ((data.info_to_display & SIDEBAR_EXTRA_DISPLAY_REQUESTS) &&
@@ -774,6 +806,100 @@ static void button_game_speed(int is_down, int param2)
 static void button_toggle_play_paused(int param1, int param2)
 {
     game_state_toggle_paused();
+}
+
+static void button_quick_load(const generic_button *button)
+{
+    const dir_listing *listing = dir_find_files_with_extension_at_location(PATH_LOCATION_SAVEGAME, "svx");
+    if (!listing || listing->num_files <= 0) {
+        listing = dir_find_files_with_extension_at_location(PATH_LOCATION_SAVEGAME, "sav");
+    }
+    if (!listing || listing->num_files <= 0) {
+        return;
+    }
+
+    const dir_entry *best = NULL;
+    for (int i = 0; i < listing->num_files; i++) {
+        const dir_entry *e = &listing->files[i];
+        if (!e->name || strstr(e->name, "autosave")) {
+            continue;
+        }
+        if (!best || e->modified_time > best->modified_time) {
+            best = e;
+        }
+    }
+    if (!best) {
+        for (int i = 0; i < listing->num_files; i++) {
+            const dir_entry *e = &listing->files[i];
+            if (e->name && (!best || e->modified_time > best->modified_time)) {
+                best = e;
+            }
+        }
+    }
+
+    if (best && best->name) {
+        const char *full_path = dir_append_location(best->name, PATH_LOCATION_SAVEGAME);
+        game_file_load_saved_game(full_path);
+    }
+}
+
+static void button_quick_save(const generic_button *button)
+{
+    const dir_listing *listing = dir_find_files_with_extension_at_location(PATH_LOCATION_SAVEGAME, "svx");
+    const dir_entry *best = NULL;
+    if (listing) {
+        for (int i = 0; i < listing->num_files; i++) {
+            const dir_entry *e = &listing->files[i];
+            if (!e->name || strstr(e->name, "autosave")) {
+                continue;
+            }
+            if (!best || e->modified_time > best->modified_time) {
+                best = e;
+            }
+        }
+    }
+
+    char base_name[128] = "City";
+    if (best && best->name) {
+        string_copy((const uint8_t *) best->name, (uint8_t *) base_name, 128);
+        char *dot = strrchr(base_name, '.');
+        if (dot) {
+            *dot = '\0';
+        }
+    } else {
+        const uint8_t *scen_n = scenario_name();
+        if (scen_n && *scen_n) {
+            string_copy(scen_n, (uint8_t *) base_name, 128);
+        }
+    }
+
+    int len = (int) strlen(base_name);
+    int num_digits = 0;
+    while (len - 1 - num_digits >= 0 && isdigit((unsigned char) base_name[len - 1 - num_digits])) {
+        num_digits++;
+    }
+
+    char new_filename[160];
+    if (num_digits > 0) {
+        int val = atoi(&base_name[len - num_digits]);
+        base_name[len - num_digits] = '\0';
+        snprintf(new_filename, sizeof(new_filename), "%s%d.svx", base_name, val + 1);
+    } else {
+        snprintf(new_filename, sizeof(new_filename), "%s2.svx", base_name);
+    }
+
+    const char *full_path = dir_append_location(new_filename, PATH_LOCATION_SAVEGAME);
+    game_file_write_saved_game(full_path);
+}
+
+static void button_normal_load(const generic_button *button)
+{
+    window_file_dialog_show(FILE_TYPE_SAVED_GAME, FILE_DIALOG_LOAD);
+}
+
+static void button_normal_save(const generic_button *button)
+{
+    window_file_dialog_show(FILE_TYPE_SAVED_GAME, FILE_DIALOG_SAVE);
 }
 
 static void confirm_nothing(int accepted, int checked)
