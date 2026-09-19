@@ -49,6 +49,28 @@ static inline const char *sidebar_extra_short_culture_reason(int rating_val, int
 }
 
 /**
+ * Concise prosperity explanation/limit strings for the sidebar extra info panel.
+ */
+static inline const char *sidebar_extra_short_prosperity_reason(int rating_val, int max_val, int explanation)
+{
+    if (rating_val >= max_val || explanation == 1) {
+        return "Housing cap";
+    }
+    switch (explanation) {
+        case 0: return "Starting";
+        case 2: return "Rising";
+        case 3: return "Losing money";
+        case 4: return "Unemployment";
+        case 5: return "Low wages";
+        case 6: return "Tents";
+        case 7: return "Unpaid tribute";
+        case 8: return "Bailout";
+        case 9: return "Dropping";
+        default: return "Rising";
+    }
+}
+
+/**
  * Concise migration status strings for the sidebar extra info panel.
  */
 static inline const char *sidebar_extra_short_migration_status(int enemies, int newcomers, int no_room, int pct, int cause)

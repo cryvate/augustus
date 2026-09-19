@@ -61,12 +61,12 @@ static void button_toggle_play_paused(int param1, int param2);
 static void button_handle_request(const generic_button *button);
 
 static arrow_button arrow_buttons_speed[] = {
-    {11, 30, 17, 24, button_game_speed, 1, 0},
-    {35, 30, 15, 24, button_game_speed, 0, 0},
+    {11, 7, 17, 24, button_game_speed, 1, 0},
+    {35, 7, 15, 24, button_game_speed, 0, 0},
 };
 
 static image_button play_paused_button = {
-    108, 29, 39, 26, IB_NORMAL, 0, 0, button_toggle_play_paused, button_none, 0, 0, 1, "UI", "Pause Button"
+    108, 6, 39, 26, IB_NORMAL, 0, 0, button_toggle_play_paused, button_none, 0, 0, 1, "UI", "Pause Button"
 };
 
 static generic_button buttons_emperor_requests[] = {
@@ -479,7 +479,7 @@ static void draw_extra_info_panel(void)
     int y_offset = data.y_offset + EXTRA_INFO_VERTICAL_PADDING;
 
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_GAME_SPEED) {
-        text_draw_percentage(data.game_speed, data.x_offset + 60, data.y_offset + 15, FONT_NORMAL_GREEN);
+        text_draw_percentage(data.game_speed, data.x_offset + 60, data.y_offset + 11, FONT_NORMAL_GREEN);
         y_offset = data.y_offset + EXTRA_INFO_HEIGHT_GAME_SPEED;
     }
 
@@ -580,7 +580,15 @@ static void draw_extra_info_panel(void)
         text_draw((const uint8_t *) cult_short, data.x_offset + 20, y_offset, FONT_NORMAL_GREEN, 0);
         y_offset += EXTRA_INFO_LINE_SPACE;
 
+        // Prosperity objective
         y_offset += draw_extra_info_objective(data.x_offset, y_offset, 53, 2, &data.objectives.prosperity, 0);
+        // Prosperity reason on line directly below Prosperity
+        const char *prosp_short = sidebar_extra_short_prosperity_reason(
+            city_rating_prosperity(), city_ratings_prosperity_max(),
+            city_rating_explanation_for(SELECTED_RATING_PROSPERITY));
+        text_draw((const uint8_t *) prosp_short, data.x_offset + 20, y_offset, FONT_NORMAL_GREEN, 0);
+        y_offset += EXTRA_INFO_LINE_SPACE;
+
         y_offset += draw_extra_info_objective(data.x_offset, y_offset, 53, 3, &data.objectives.peace, 0);
         y_offset += draw_extra_info_objective(data.x_offset, y_offset, 53, 4, &data.objectives.favor, 0);
         y_offset += draw_extra_info_objective(data.x_offset, y_offset, 4, 6, &data.objectives.population, 1);
