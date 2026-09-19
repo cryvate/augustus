@@ -51,7 +51,7 @@
 #define EXTRA_INFO_VERTICAL_PADDING 1
 #define EXTRA_INFO_HEIGHT_GAME_SPEED 34
 #define EXTRA_INFO_HEIGHT_UNEMPLOYMENT 36
-#define EXTRA_INFO_HEIGHT_INVASIONS 0
+#define EXTRA_INFO_HEIGHT_INVASIONS 16
 #define EXTRA_INFO_HEIGHT_GODS 72
 #define EXTRA_INFO_HEIGHT_RATINGS 86
 #define EXTRA_INFO_HEIGHT_SUMMARY_TEXT 30
@@ -499,6 +499,15 @@ static void draw_extra_info_panel(void)
         y_offset += EXTRA_INFO_LINE_SPACE + 2;
         data.unemployment_buttons_y_offset = y_offset;
         y_offset += 20 + 2;
+    }
+
+    if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_INVASIONS) {
+        font_t font_type = (data.next_invasion == 0 || data.next_invasion == 2) ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
+
+        text_draw_centered(translation_for(TR_SIDEBAR_EXTRA_INVASION_UNDERWAY + data.next_invasion),
+            data.x_offset, y_offset, data.width, font_type, 0);
+
+        y_offset += EXTRA_INFO_LINE_SPACE + 1;
     }
 
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_GODS) {
