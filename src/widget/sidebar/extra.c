@@ -79,10 +79,10 @@ static image_button play_paused_button = {
 };
 
 static generic_button quick_buttons[] = {
-    {10, 0, 32, 20, button_normal_load},
-    {46, 0, 32, 20, button_quick_load},
-    {82, 0, 32, 20, button_quick_save},
-    {118, 0, 32, 20, button_normal_save}
+    {10, 0, 32, 20, button_quick_load},
+    {46, 0, 32, 20, button_normal_load},
+    {82, 0, 32, 20, button_normal_save},
+    {118, 0, 32, 20, button_quick_save}
 };
 
 static generic_button buttons_emperor_requests[] = {
@@ -674,16 +674,16 @@ static void draw_extra_info_buttons(void)
     }
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_UNEMPLOYMENT) {
         button_border_draw(data.x_offset + 10, data.unemployment_buttons_y_offset, 32, 20, data.focused_quick_button_id == 1);
-        text_draw_centered((const uint8_t *) "L", data.x_offset + 10, data.unemployment_buttons_y_offset + 2, 32, FONT_NORMAL_GREEN, 0);
+        text_draw_centered((const uint8_t *) "QL", data.x_offset + 10, data.unemployment_buttons_y_offset + 2, 32, FONT_NORMAL_GREEN, 0);
 
         button_border_draw(data.x_offset + 46, data.unemployment_buttons_y_offset, 32, 20, data.focused_quick_button_id == 2);
-        text_draw_centered((const uint8_t *) "QL", data.x_offset + 46, data.unemployment_buttons_y_offset + 2, 32, FONT_NORMAL_GREEN, 0);
+        text_draw_centered((const uint8_t *) "L", data.x_offset + 46, data.unemployment_buttons_y_offset + 2, 32, FONT_NORMAL_GREEN, 0);
 
         button_border_draw(data.x_offset + 82, data.unemployment_buttons_y_offset, 32, 20, data.focused_quick_button_id == 3);
-        text_draw_centered((const uint8_t *) "QS", data.x_offset + 82, data.unemployment_buttons_y_offset + 2, 32, FONT_NORMAL_GREEN, 0);
+        text_draw_centered((const uint8_t *) "S", data.x_offset + 82, data.unemployment_buttons_y_offset + 2, 32, FONT_NORMAL_GREEN, 0);
 
         button_border_draw(data.x_offset + 118, data.unemployment_buttons_y_offset, 32, 20, data.focused_quick_button_id == 4);
-        text_draw_centered((const uint8_t *) "S", data.x_offset + 118, data.unemployment_buttons_y_offset + 2, 32, FONT_NORMAL_GREEN, 0);
+        text_draw_centered((const uint8_t *) "QS", data.x_offset + 118, data.unemployment_buttons_y_offset + 2, 32, FONT_NORMAL_GREEN, 0);
     }
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_REQUESTS && data.active_requests) {
         for (unsigned int i = 0; i < data.visible_requests; i++) {
@@ -880,12 +880,12 @@ static void button_quick_save(const generic_button *button)
     }
 
     char new_filename[160];
-    if (num_digits > 0) {
+    if (num_digits > 0 && len - 1 - num_digits >= 0 && base_name[len - 1 - num_digits] == ' ') {
         int val = atoi(&base_name[len - num_digits]);
-        base_name[len - num_digits] = '\0';
-        snprintf(new_filename, sizeof(new_filename), "%s%d.svx", base_name, val + 1);
+        base_name[len - 1 - num_digits] = '\0';
+        snprintf(new_filename, sizeof(new_filename), "%s %d.svx", base_name, val + 1);
     } else {
-        snprintf(new_filename, sizeof(new_filename), "%s2.svx", base_name);
+        snprintf(new_filename, sizeof(new_filename), "%s 2.svx", base_name);
     }
 
     const char *full_path = dir_append_location(new_filename, PATH_LOCATION_SAVEGAME);
