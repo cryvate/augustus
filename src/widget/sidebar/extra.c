@@ -527,14 +527,14 @@ static void draw_extra_info_panel(void)
 
             int t_x = data.x_offset + 38;
             int small_w = text_draw_number(small_count, 0, "", t_x, y_offset, font, 0);
-            int large_x = t_x + small_w + 14;
+            int large_x = t_x + small_w + 6;
             int large_w = text_draw_number(large_count, 0, "", large_x, y_offset, font, 0);
 
             int mood_idx = city_god_happiness(i) / 10;
             if (mood_idx > 10) {
                 mood_idx = 10;
             }
-            int mood_x = large_x + large_w + 3;
+            int mood_x = large_x + large_w + 8;
             int mood_width = lang_text_draw(59, 32 + mood_idx, mood_x, y_offset, font);
 
             if (city_god_wrath_bolts(i) > 0) {
@@ -594,7 +594,9 @@ int sidebar_extra_draw_background(int x_offset, int y_offset, int width, int ava
     data.width = width;
     data.info_to_display = calculate_displayable_info(info_to_display, available_height);
     data.available_height = available_height;
-    data.height = calculate_extra_info_height(available_height);
+    int content_height = calculate_extra_info_height(available_height);
+    int full_panel_height = ((available_height - 120) / BLOCK_SIZE) * BLOCK_SIZE;
+    data.height = full_panel_height > content_height ? full_panel_height : content_height;
 
     if (data.info_to_display != SIDEBAR_EXTRA_DISPLAY_NONE) {
         update_extra_info(1);
