@@ -44,7 +44,7 @@
 
 #define EXTRA_INFO_LINE_SPACE 16
 #define EXTRA_INFO_VERTICAL_PADDING 2
-#define EXTRA_INFO_HEIGHT_GAME_SPEED 64
+#define EXTRA_INFO_HEIGHT_GAME_SPEED 38
 #define EXTRA_INFO_HEIGHT_UNEMPLOYMENT 20
 #define EXTRA_INFO_HEIGHT_INVASIONS 36
 #define EXTRA_INFO_HEIGHT_GODS 84
@@ -479,8 +479,7 @@ static void draw_extra_info_panel(void)
     int y_offset = data.y_offset + EXTRA_INFO_VERTICAL_PADDING;
 
     if (data.info_to_display & SIDEBAR_EXTRA_DISPLAY_GAME_SPEED) {
-        lang_text_draw(45, 2, data.x_offset + 10, data.y_offset + 8, FONT_NORMAL_WHITE);
-        text_draw_percentage(data.game_speed, data.x_offset + 60, data.y_offset + 30, FONT_NORMAL_GREEN);
+        text_draw_percentage(data.game_speed, data.x_offset + 60, data.y_offset + 15, FONT_NORMAL_GREEN);
         y_offset = data.y_offset + EXTRA_INFO_HEIGHT_GAME_SPEED;
     }
 
@@ -573,7 +572,14 @@ static void draw_extra_info_panel(void)
 
         data.objectives_y_offset = y_offset;
 
+        // Culture objective
         y_offset += draw_extra_info_objective(data.x_offset, y_offset, 53, 1, &data.objectives.culture, 0);
+        // Culture reason on line directly below Culture
+        const char *cult_short = sidebar_extra_short_culture_reason(
+            city_rating_culture(), city_rating_explanation_for(SELECTED_RATING_CULTURE));
+        text_draw((const uint8_t *) cult_short, data.x_offset + 20, y_offset, FONT_NORMAL_GREEN, 0);
+        y_offset += EXTRA_INFO_LINE_SPACE;
+
         y_offset += draw_extra_info_objective(data.x_offset, y_offset, 53, 2, &data.objectives.prosperity, 0);
         y_offset += draw_extra_info_objective(data.x_offset, y_offset, 53, 3, &data.objectives.peace, 0);
         y_offset += draw_extra_info_objective(data.x_offset, y_offset, 53, 4, &data.objectives.favor, 0);
@@ -585,6 +591,16 @@ static void draw_extra_info_panel(void)
         int width = text_draw((const uint8_t *) "Room", data.x_offset + 10, y_offset, font, 0);
         width += text_draw((const uint8_t *) ":", data.x_offset + 10 + width, y_offset, font, 0);
         text_draw_number(city_population_open_housing_capacity(), 0, "", data.x_offset + 10 + width, y_offset, font, 0);
+        y_offset += EXTRA_INFO_LINE_SPACE;
+
+        // Migration status on line directly below Room
+        const char *mig_short = sidebar_extra_short_migration_status(
+            city_figures_total_invading_enemies(),
+            city_migration_newcomers(),
+            city_migration_no_room_for_immigrants(),
+            city_migration_percentage(),
+            city_migration_no_immigration_cause());
+        text_draw((const uint8_t *) mig_short, data.x_offset + 20, y_offset, FONT_NORMAL_GREEN, 0);
         y_offset += EXTRA_INFO_LINE_SPACE + 2;
     }
 
@@ -601,50 +617,6 @@ static void draw_extra_info_panel(void)
         } else {
             y_offset += draw_request_buttons(y_offset);
         }
-    }
-
-    // Culture reason & Migration status at bottom
-    int culture_text_id = city_rating_culture() > 90 ? 50 : 9 + city_rating_explanation_for(SELECTED_RATING_CULTURE);
-    const uint8_t *cult_str = lang_get_string(53, culture_text_id);
-    if (cult_str && *cult_str) {
-        y_offset += 2;
-        int w = text_draw((const uint8_t *) "Culture:", data.x_offset + 10, y_offset, FONT_NORMAL_WHITE, 0);
-        text_draw_ellipsized(cult_str, data.x_offset + 10 + w + 2, y_offset, data.width - (10 + w + 2) - 4, FONT_NORMAL_GREEN, 0);
-        y_offset += EXTRA_INFO_LINE_SPACE;
-    }
-
-    const uint8_t *mig_str = NULL;
-    if (city_figures_total_invading_enemies() > 3) {
-        mig_str = lang_get_string(61, 79);
-    } else if (city_migration_newcomers() >= 5 || city_migration_percentage() >= 80) {
-        mig_str = lang_get_string(61, 25);
-    } else if (city_migration_no_room_for_immigrants()) {
-        mig_str = lang_get_string(61, 18);
-    } else {
-        int text_group = 61;
-        int text_id = 0;
-        switch (city_migration_no_immigration_cause()) {
-            case NO_IMMIGRATION_LOW_WAGES: text_id = 19; break;
-            case NO_IMMIGRATION_NO_JOBS: text_id = 20; break;
-            case NO_IMMIGRATION_NO_FOOD: text_id = 21; break;
-            case NO_IMMIGRATION_HIGH_TAXES: text_id = 22; break;
-            case NO_IMMIGRATION_MANY_TENTS: text_id = 70; break;
-            case NO_IMMIGRATION_LOW_MOOD: text_id = 71; break;
-            case NO_IMMIGRATION_SQUALOR:
-                text_group = CUSTOM_TRANSLATION;
-                text_id = TR_ADVISOR_CHIEF_NO_IMMIGRATION_SQUALOR;
-                break;
-            default: break;
-        }
-        if (text_id) {
-            mig_str = lang_get_string(text_group, text_id);
-        }
-    }
-
-    if (mig_str && *mig_str) {
-        int w = text_draw((const uint8_t *) "Migr:", data.x_offset + 10, y_offset, FONT_NORMAL_WHITE, 0);
-        text_draw_ellipsized(mig_str, data.x_offset + 10 + w + 2, y_offset, data.width - (10 + w + 2) - 4, FONT_NORMAL_GREEN, 0);
-        y_offset += EXTRA_INFO_LINE_SPACE;
     }
 }
 

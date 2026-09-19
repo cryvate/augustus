@@ -28,4 +28,50 @@ int sidebar_extra_get_tooltip(tooltip_context *c);
 
 int sidebar_extra_is_information_displayed(sidebar_extra_display display);
 
+#include "city/constants.h"
+
+/**
+ * Concise culture explanation strings for the sidebar extra info panel.
+ */
+static inline const char *sidebar_extra_short_culture_reason(int rating_val, int explanation)
+{
+    if (rating_val >= 100) {
+        return "Excellent";
+    }
+    switch (explanation) {
+        case 1: return "Schools";
+        case 2: return "Libraries";
+        case 3: return "Academies";
+        case 4: return "Temples";
+        case 5: return "Theaters";
+        default: return "Libraries";
+    }
+}
+
+/**
+ * Concise migration status strings for the sidebar extra info panel.
+ */
+static inline const char *sidebar_extra_short_migration_status(int enemies, int newcomers, int no_room, int pct, int cause)
+{
+    if (enemies > 3) {
+        return "Enemies near";
+    }
+    if (newcomers >= 5 || pct >= 80) {
+        return "Migrating in";
+    }
+    if (no_room) {
+        return "No room";
+    }
+    switch (cause) {
+        case NO_IMMIGRATION_LOW_WAGES: return "Low wages";
+        case NO_IMMIGRATION_NO_JOBS: return "No jobs";
+        case NO_IMMIGRATION_NO_FOOD: return "No food";
+        case NO_IMMIGRATION_HIGH_TAXES: return "High taxes";
+        case NO_IMMIGRATION_MANY_TENTS: return "Tents";
+        case NO_IMMIGRATION_LOW_MOOD: return "Low sentiment";
+        case NO_IMMIGRATION_SQUALOR: return "Squalid";
+        default: return "Normal";
+    }
+}
+
 #endif // WIDGET_SIDEBAR_FILLER_H
