@@ -1,12 +1,25 @@
 package com.github.Keriew.augustus;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.net.Uri;
+import android.os.Bundle;
 
 import org.libsdl.app.SDLActivity;
 
 public class AugustusMainActivity extends SDLActivity {
     private static final int GET_FOLDER_RESULT = 500;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+        super.onCreate(savedInstanceState);
+        if (getWindow() != null) {
+            getWindow().getDecorView().post(() ->
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER)
+            );
+        }
+    }
 
     @Override
     public void onStop() {

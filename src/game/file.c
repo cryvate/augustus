@@ -209,7 +209,7 @@ static void initialize_scenario_data(const uint8_t *scenario_name)
     city_data_init_scenario();
 
     setting_set_default_game_speed();
-    game_state_unpause();
+    game_state_pause();
 
     weather_reset();
 }
@@ -316,7 +316,7 @@ static void initialize_saved_game(void)
 
     setting_set_default_game_speed();
 
-    game_state_unpause();
+    game_state_pause();
 
     weather_reset();
 }
