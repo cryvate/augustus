@@ -6,6 +6,7 @@
 #include "core/lang.h"
 #include "core/log.h"
 #include "core/time.h"
+#include "game/file.h"
 #include "game/game.h"
 #include "game/settings.h"
 #include "game/system.h"
@@ -252,6 +253,7 @@ static int handle_event_immediate(void *param1, SDL_Event *event)
 {
     switch (event->type) {
         case SDL_APP_WILLENTERBACKGROUND:
+            game_file_write_resume_autosave();
             platform_renderer_pause();
             return 0;
         default:

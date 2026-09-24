@@ -41,6 +41,12 @@ int game_file_load_saved_game(const char *filename);
 int game_file_load_latest_save(void);
 
 /**
+ * Write auto-resume save file
+ * @return 1 on success, 0 on failure
+ */
+int game_file_write_resume_autosave(void);
+
+/**
  * Write saved game to disk
  * @param filename File to save to
  * @return Boolean true on success, false on failure

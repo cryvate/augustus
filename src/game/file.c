@@ -23,7 +23,9 @@
 #include "core/io.h"
 #include "core/lang.h"
 #include "core/string.h"
+#include "editor/editor.h"
 #include "empire/city.h"
+#include "graphics/window.h"
 #include "empire/empire.h"
 #include "empire/trade_prices.h"
 #include "figure/enemy_army.h"
@@ -574,4 +576,22 @@ int game_file_load_latest_save(void)
         }
     }
     return 0;
+}
+
+int game_file_write_resume_autosave(void)
+{
+    if (editor_is_active()) {
+        return 0;
+    }
+    window_id id = window_get_id();
+    if (id == WINDOW_LOGO || id == WINDOW_MAIN_MENU ||
+        id == WINDOW_SELECT_CAMPAIGN || id == WINDOW_CONFIG ||
+        id == WINDOW_HOTKEY_CONFIG || id == WINDOW_USER_PATH_SETUP) {
+        return 0;
+    }
+    const char *full_path = dir_append_location("Autosave-resume.svx", PATH_LOCATION_SAVEGAME);
+    if (!full_path) {
+        return 0;
+    }
+    return game_file_write_saved_game(full_path);
 }

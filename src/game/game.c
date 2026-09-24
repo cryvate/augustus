@@ -21,6 +21,7 @@
 #include "game/settings.h"
 #include "game/speed.h"
 #include "game/state.h"
+#include "game/system.h"
 #include "game/tick.h"
 #include "graphics/font.h"
 #include "graphics/graphics.h"
@@ -228,6 +229,19 @@ int game_reload_language(void)
     return reload_language(editor_is_active(), 1);
 }
 
+static int is_game_running(void)
+{
+    if (editor_is_active()) {
+        return 0;
+    }
+    window_id id = window_get_id();
+    return id != WINDOW_LOGO && id != WINDOW_MAIN_MENU &&
+           id != WINDOW_SELECT_CAMPAIGN && id != WINDOW_CONFIG &&
+           id != WINDOW_HOTKEY_CONFIG && id != WINDOW_USER_PATH_SETUP;
+}
+
+static uint64_t last_resume_autosave_ticks = 0;
+
 void game_run(void)
 {
     game_animation_update();
@@ -238,6 +252,16 @@ void game_run(void)
 
         if (window_is_invalid()) {
             break;
+        }
+    }
+
+    if (is_game_running()) {
+        uint64_t current_ticks = system_get_ticks();
+        if (last_resume_autosave_ticks == 0) {
+            last_resume_autosave_ticks = current_ticks;
+        } else if (current_ticks - last_resume_autosave_ticks >= 10000) {
+            game_file_write_resume_autosave();
+            last_resume_autosave_ticks = current_ticks;
         }
     }
 }
