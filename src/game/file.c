@@ -70,6 +70,7 @@
 #include "scenario/distant_battle.h"
 #include "scenario/earthquake.h"
 #include "scenario/emperor_change.h"
+#include "window/city.h"
 #include "scenario/empire.h"
 #include "scenario/event/controller.h"
 #include "scenario/gladiator_revolt.h"
@@ -568,6 +569,7 @@ int game_file_load_latest_save(void)
     if (best && best->name) {
         const char *full_path = dir_append_location(best->name, PATH_LOCATION_SAVEGAME);
         if (game_file_load_saved_game(full_path) == 1) {
+            window_city_show();
             return 1;
         }
     }
