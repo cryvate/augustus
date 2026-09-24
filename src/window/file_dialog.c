@@ -193,7 +193,11 @@ static void init_filtered_file_list(void)
     }
 
     for (int i = 0; i < data.file_list->num_files; i++) {
-        if (!filter || platform_file_manager_filename_contains(data.file_list->files[i].name, filter)) {
+        const char *filename = data.file_list->files[i].name;
+        if (filename && strncmp(filename, "autosave-resume-", 16) == 0) {
+            continue;
+        }
+        if (!filter || platform_file_manager_filename_contains(filename, filter)) {
             data.filtered_file_list.files[data.filtered_file_list.num_files] = data.file_list->files[i];
             data.filtered_file_list.num_files++;
         }
