@@ -193,11 +193,7 @@ static void init_filtered_file_list(void)
     }
 
     for (int i = 0; i < data.file_list->num_files; i++) {
-        const char *filename = data.file_list->files[i].name;
-        if (filename && strncmp(filename, "autosave-resume-", 16) == 0) {
-            continue;
-        }
-        if (!filter || platform_file_manager_filename_contains(filename, filter)) {
+        if (!filter || platform_file_manager_filename_contains(data.file_list->files[i].name, filter)) {
             data.filtered_file_list.files[data.filtered_file_list.num_files] = data.file_list->files[i];
             data.filtered_file_list.num_files++;
         }
@@ -240,20 +236,22 @@ static void init(file_type type, file_dialog_type dialog_type)
     }
     data.dialog_type = dialog_type;
 
-    if (dialog_type == FILE_DIALOG_SAVE) {
-        if (type == FILE_TYPE_SAVED_GAME) {
-            snprintf(data.selected_file, FILE_NAME_MAX, "%s", game_file_get_original_save_name());
-        } else if (strlen(data.file_data->last_loaded_file) > 0) {
-            snprintf(data.selected_file, FILE_NAME_MAX, "%s", data.file_data->last_loaded_file);
-        } else {
-            string_copy(lang_get_string(9, type == FILE_TYPE_SCENARIO ? 7 : 6), data.typed_name, FILE_NAME_MAX);
-            encoding_to_utf8(data.typed_name, data.selected_file, FILE_NAME_MAX, encoding_system_uses_decomposed());
+    if (strlen(data.file_data->last_loaded_file) > 0) {
+        snprintf(data.selected_file, FILE_NAME_MAX, "%s", data.file_data->last_loaded_file);
+        if (data.dialog_type == FILE_DIALOG_SAVE) {
+            file_remove_extension(data.selected_file);
         }
-        file_remove_extension(data.selected_file);
         encoding_from_utf8(data.selected_file, data.typed_name, FILE_NAME_MAX);
+        if (data.dialog_type == FILE_DIALOG_SAVE) {
+            file_append_extension(data.selected_file, data.file_data->extension, FILE_NAME_MAX);
+        }
+    } else if (dialog_type == FILE_DIALOG_SAVE) {
+        // Suggest default filename
+        string_copy(lang_get_string(9, type == FILE_TYPE_SCENARIO ? 7 : 6), data.typed_name, FILE_NAME_MAX);
+        encoding_to_utf8(data.typed_name, data.selected_file, FILE_NAME_MAX, encoding_system_uses_decomposed());
         file_append_extension(data.selected_file, data.file_data->extension, FILE_NAME_MAX);
     } else {
-        // Use empty string for load dialogs so file list is not filtered
+        // Use empty string
         data.typed_name[0] = 0;
         data.selected_file[0] = 0;
     }
