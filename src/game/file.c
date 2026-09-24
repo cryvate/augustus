@@ -535,3 +535,41 @@ void game_file_write_mission_saved_game(void)
         game_file_io_write_saved_game(dir_append_location(filename, PATH_LOCATION_SAVEGAME));
     }
 }
+
+int game_file_load_latest_save(void)
+{
+    const dir_listing *listing = dir_find_files_with_extension_at_location(PATH_LOCATION_SAVEGAME, "svx");
+    if (!listing || listing->num_files <= 0) {
+        listing = dir_find_files_with_extension_at_location(PATH_LOCATION_SAVEGAME, "sav");
+    }
+    if (!listing || listing->num_files <= 0) {
+        return 0;
+    }
+
+    const dir_entry *best = NULL;
+    for (int i = 0; i < listing->num_files; i++) {
+        const dir_entry *e = &listing->files[i];
+        if (!e->name || strstr(e->name, "autosave")) {
+            continue;
+        }
+        if (!best || e->modified_time > best->modified_time) {
+            best = e;
+        }
+    }
+    if (!best) {
+        for (int i = 0; i < listing->num_files; i++) {
+            const dir_entry *e = &listing->files[i];
+            if (e->name && (!best || e->modified_time > best->modified_time)) {
+                best = e;
+            }
+        }
+    }
+
+    if (best && best->name) {
+        const char *full_path = dir_append_location(best->name, PATH_LOCATION_SAVEGAME);
+        if (game_file_load_saved_game(full_path) == 1) {
+            return 1;
+        }
+    }
+    return 0;
+}

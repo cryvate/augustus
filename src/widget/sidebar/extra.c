@@ -809,37 +809,7 @@ static void button_toggle_play_paused(int param1, int param2)
 
 static void button_quick_load(const generic_button *button)
 {
-    const dir_listing *listing = dir_find_files_with_extension_at_location(PATH_LOCATION_SAVEGAME, "svx");
-    if (!listing || listing->num_files <= 0) {
-        listing = dir_find_files_with_extension_at_location(PATH_LOCATION_SAVEGAME, "sav");
-    }
-    if (!listing || listing->num_files <= 0) {
-        return;
-    }
-
-    const dir_entry *best = NULL;
-    for (int i = 0; i < listing->num_files; i++) {
-        const dir_entry *e = &listing->files[i];
-        if (!e->name || strstr(e->name, "autosave")) {
-            continue;
-        }
-        if (!best || e->modified_time > best->modified_time) {
-            best = e;
-        }
-    }
-    if (!best) {
-        for (int i = 0; i < listing->num_files; i++) {
-            const dir_entry *e = &listing->files[i];
-            if (e->name && (!best || e->modified_time > best->modified_time)) {
-                best = e;
-            }
-        }
-    }
-
-    if (best && best->name) {
-        const char *full_path = dir_append_location(best->name, PATH_LOCATION_SAVEGAME);
-        game_file_load_saved_game(full_path);
-    }
+    game_file_load_latest_save();
 }
 
 static void button_quick_save(const generic_button *button)

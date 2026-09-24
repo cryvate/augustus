@@ -159,7 +159,11 @@ int game_init(void)
         actions |= ACTION_SHOW_INTRO_VIDEOS;
     }
 
-    window_logo_show(actions);
+    if (actions != ACTION_NONE) {
+        window_logo_show(actions);
+    } else if (!game_file_load_latest_save()) {
+        window_main_menu_show(0);
+    }
     return 1;
 }
 
