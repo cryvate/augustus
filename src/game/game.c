@@ -237,7 +237,9 @@ static int is_game_running(void)
     window_id id = window_get_id();
     return id != WINDOW_LOGO && id != WINDOW_MAIN_MENU &&
            id != WINDOW_SELECT_CAMPAIGN && id != WINDOW_CONFIG &&
-           id != WINDOW_HOTKEY_CONFIG && id != WINDOW_USER_PATH_SETUP;
+           id != WINDOW_HOTKEY_CONFIG && id != WINDOW_USER_PATH_SETUP &&
+           id != WINDOW_FILE_DIALOG && id != WINDOW_POPUP_DIALOG &&
+           id != WINDOW_PLAIN_MESSAGE_DIALOG;
 }
 
 static uint64_t last_resume_autosave_ticks = 0;
