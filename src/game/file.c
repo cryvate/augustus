@@ -593,7 +593,7 @@ int game_file_load_latest_save(void)
     const dir_entry *best = NULL;
     for (int i = 0; i < listing->num_files; i++) {
         const dir_entry *e = &listing->files[i];
-        if (!e->name) {
+        if (!e->name || strncmp(e->name, "autosave-resume-", 16) != 0) {
             continue;
         }
         if (!best || e->modified_time > best->modified_time) {

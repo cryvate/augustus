@@ -33,7 +33,7 @@
             android:exported="true"
             android:preferMinimalPostProcessing="true"
             android:resizeableActivity="true"
-            android:screenOrientation="fullUser">
+            android:screenOrientation="sensorLandscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -42,6 +42,7 @@
         <activity
             android:name=".DirectorySelectionActivity"
             android:exported="false"
+            android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
         <!-- Support for Samsung DeX -->
