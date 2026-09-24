@@ -40,6 +40,9 @@ int game_file_load_saved_game(const char *filename);
  */
 int game_file_load_latest_save(void);
 
+const char *game_file_get_original_save_name(void);
+void game_file_set_original_save_name(const char *filename);
+
 /**
  * Write auto-resume save file
  * @return 1 on success, 0 on failure

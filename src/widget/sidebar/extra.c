@@ -814,33 +814,8 @@ static void button_quick_load(const generic_button *button)
 
 static void button_quick_save(const generic_button *button)
 {
-    const dir_listing *listing = dir_find_files_with_extension_at_location(PATH_LOCATION_SAVEGAME, "svx");
-    const dir_entry *best = NULL;
-    if (listing) {
-        for (int i = 0; i < listing->num_files; i++) {
-            const dir_entry *e = &listing->files[i];
-            if (!e->name || strstr(e->name, "autosave")) {
-                continue;
-            }
-            if (!best || e->modified_time > best->modified_time) {
-                best = e;
-            }
-        }
-    }
-
-    char base_name[128] = "City";
-    if (best && best->name) {
-        string_copy((const uint8_t *) best->name, (uint8_t *) base_name, 128);
-        char *dot = strrchr(base_name, '.');
-        if (dot) {
-            *dot = '\0';
-        }
-    } else {
-        const uint8_t *scen_n = scenario_name();
-        if (scen_n && *scen_n) {
-            string_copy(scen_n, (uint8_t *) base_name, 128);
-        }
-    }
+    char base_name[128];
+    snprintf(base_name, sizeof(base_name), "%s", game_file_get_original_save_name());
 
     int len = (int) strlen(base_name);
     int num_digits = 0;
