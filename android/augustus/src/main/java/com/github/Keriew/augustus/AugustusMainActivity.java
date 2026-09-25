@@ -2,22 +2,64 @@ package com.github.Keriew.augustus;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.OrientationEventListener;
 
 import org.libsdl.app.SDLActivity;
 
 public class AugustusMainActivity extends SDLActivity {
     private static final int GET_FOLDER_RESULT = 500;
+    private int lastOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
+    private OrientationEventListener orientationEventListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
         super.onCreate(savedInstanceState);
-        if (getWindow() != null) {
-            getWindow().getDecorView().post(() ->
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER)
-            );
+
+        orientationEventListener = new OrientationEventListener(this) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+                if (orientation == ORIENTATION_UNKNOWN) return;
+
+                if ((orientation >= 60 && orientation <= 120) || (orientation >= 240 && orientation <= 300)) {
+                    if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+                        lastOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
+                    }
+                } else if ((orientation >= 330 || orientation <= 30) || (orientation >= 150 && orientation <= 210)) {
+                    if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT) {
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+                        lastOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
+                    }
+                }
+            }
+        };
+    }
+
+    @Override
+    protected void onPause() {
+        if (orientationEventListener != null) {
+            orientationEventListener.disable();
+        }
+        int currentOrientation = getResources().getConfiguration().orientation;
+        if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+            lastOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
+        } else if (currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
+            lastOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
+        }
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        if (lastOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+            setRequestedOrientation(lastOrientation);
+        }
+        super.onResume();
+        if (orientationEventListener != null && orientationEventListener.canDetectOrientation()) {
+            orientationEventListener.enable();
         }
     }
 

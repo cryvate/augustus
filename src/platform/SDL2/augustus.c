@@ -463,6 +463,7 @@ static int init_sdl(int enable_joysticks)
 #endif
 #ifdef __ANDROID__
     SDL_SetHint(SDL_HINT_ANDROID_TRAP_BACK_BUTTON, "1");
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight Portrait PortraitUpsideDown");
 #endif
     SDL_version version;
     SDL_GetVersion(&version);

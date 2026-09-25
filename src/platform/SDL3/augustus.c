@@ -542,6 +542,7 @@ static int init_sdl(int enable_joysticks)
     SDL_SetHint(SDL_HINT_TRACKPAD_IS_TOUCH_ONLY, "0");
     SDL_SetHint(SDL_HINT_VITA_ENABLE_BACK_TOUCH, "0");
     SDL_SetHint(SDL_HINT_ANDROID_TRAP_BACK_BUTTON, "1");
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight Portrait PortraitUpsideDown");
 
     if (!SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)) {
         // Try starting SDL without joystick support
