@@ -2,7 +2,7 @@
 
 ## Remotes
 - **Origin**: `origin` (`git@github.com:cryvate/augustus.git`)
-- **Original Upstream Remote**: `upstream` (`https://github.com/Keriew/augustus.git`)
+- **Original Upstream Remote**: `upstream` (`git@github.com:Keriew/augustus.git`)
 
 ## Central Branch Management
 - **Central Branch**: `hj-android` contains all current changes we want included.
