@@ -26,6 +26,9 @@ void city_data_init(void)
     city_data.population.monthly.count = 0;
     city_data.festival.months_since_festival = 1;
     city_data.festival.selected.size = FESTIVAL_SMALL;
+    city_data.festival.auto_festival_enabled = 0;
+    city_data.festival.auto_festival_size = FESTIVAL_SMALL;
+    city_data.festival.auto_festival_god = -1;
     city_data.emperor.gifts[GIFT_MODEST].cost = 0;
     city_data.emperor.gifts[GIFT_GENEROUS].cost = 0;
     city_data.emperor.gifts[GIFT_LAVISH].cost = 0;

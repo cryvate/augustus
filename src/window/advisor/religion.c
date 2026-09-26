@@ -7,11 +7,13 @@
 #include "city/houses.h"
 #include "game/settings.h"
 #include "graphics/button.h"
+#include "graphics/complex_button.h"
 #include "graphics/generic_button.h"
 #include "graphics/image.h"
 #include "graphics/lang_text.h"
 #include "graphics/panel.h"
 #include "graphics/text.h"
+#include "graphics/window.h"
 #include "window/hold_festival.h"
 #include "window/epithets.h"
 
@@ -168,6 +170,62 @@ static int draw_background(void)
     return height_blocks;
 }
 
+static void button_auto_festival_clicked(checkbox_button *button)
+{
+    int new_state = !city_festival_auto_enabled();
+    city_festival_set_auto_enabled(new_state);
+    window_invalidate();
+}
+
+static void button_auto_size_clicked(cycling_button *button)
+{
+    int current_size = city_festival_auto_size();
+    int next_size = current_size + 1;
+    if (next_size > FESTIVAL_GRAND) {
+        next_size = FESTIVAL_SMALL;
+    }
+    city_festival_set_auto_size(next_size);
+    window_invalidate();
+}
+
+static checkbox_button auto_festival_checkbox = {
+    .x = 410,
+    .y = 330,
+    .width = 160,
+    .height = 20,
+    .left_click_handler = button_auto_festival_clicked,
+    .font = FONT_NORMAL_WHITE,
+    .fill_bg = 0,
+};
+
+static cycling_button size_cycling_button;
+
+static void setup_auto_festival_cycling_buttons(void)
+{
+    size_cycling_button.x = 410;
+    size_cycling_button.y = 355;
+    size_cycling_button.width = 160;
+    size_cycling_button.height = 20;
+    size_cycling_button.style = CYCLING_BUTTON_STYLE_GRAY;
+    size_cycling_button.state_count = 3;
+    size_cycling_button.left_click_handler = button_auto_size_clicked;
+
+    static lang_fragment seq_small[1], seq_large[1], seq_grand[1];
+    lang_seq_frag_text(&seq_small[0], (const uint8_t *)"Size: Small");
+    lang_seq_frag_text(&seq_large[0], (const uint8_t *)"Size: Large");
+    lang_seq_frag_text(&seq_grand[0], (const uint8_t *)"Size: Grand");
+
+    size_cycling_button.states[0].sequence = seq_small;
+    size_cycling_button.states[0].sequence_size = 1;
+    size_cycling_button.states[1].sequence = seq_large;
+    size_cycling_button.states[1].sequence_size = 1;
+    size_cycling_button.states[2].sequence = seq_grand;
+    size_cycling_button.states[2].sequence_size = 1;
+
+    int current_size = city_festival_auto_size();
+    size_cycling_button.state_index = (current_size >= 1 && current_size <= 3) ? (current_size - 1) : 0;
+}
+
 static void draw_foreground(void)
 {
     if (!city_festival_is_planned()) {
@@ -176,12 +234,26 @@ static void draw_foreground(void)
 
     button_border_draw(590, 20, 32, 24, focus_button_id == 2);
 
+    auto_festival_checkbox.is_checked = (short)city_festival_auto_enabled();
+    static lang_fragment auto_fest_seq[1];
+    lang_seq_frag_text(&auto_fest_seq[0], (const uint8_t *)"Auto-Festival");
+    auto_festival_checkbox.sequence = auto_fest_seq;
+    auto_festival_checkbox.sequence_size = 1;
+
+    checkbox_button_draw(&auto_festival_checkbox);
+
+    setup_auto_festival_cycling_buttons();
+    cycling_button_draw(&size_cycling_button);
+
     image_draw(982, 594, 24, COLOR_MASK_NONE, SCALE_NONE);
 }
 
 static int handle_mouse(const mouse *m)
 {
-    return generic_buttons_handle_mouse(m, 0, 0, hold_festival_button, 2, &focus_button_id);
+    int handled = checkbox_button_handle_mouse(&auto_festival_checkbox, m);
+    handled |= cycling_button_handle_mouse(&size_cycling_button, m);
+    handled |= generic_buttons_handle_mouse(m, 0, 0, hold_festival_button, 2, &focus_button_id);
+    return handled;
 }
 
 static void button_hold_festival(const generic_button *button)

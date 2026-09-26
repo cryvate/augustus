@@ -314,6 +314,10 @@ extern struct city_data_t {
         int32_t months_since_festival;
         int32_t first_festival_effect_months;
         int32_t second_festival_effect_months;
+
+        int32_t auto_festival_enabled;
+        int32_t auto_festival_size;
+        int32_t auto_festival_god;
     } festival;
     struct {
         int32_t selected_games_id;

@@ -5,6 +5,7 @@
 #include "building/industry.h"
 #include "city/culture.h"
 #include "city/data_private.h"
+#include "city/festival.h"
 #include "city/health.h"
 #include "city/message.h"
 #include "city/population.h"
@@ -62,25 +63,26 @@ void city_gods_update_blessings(void)
 
 static void perform_blessing(god_type god)
 {
+    int use_popup = city_festival_auto_enabled() ? 0 : 1;
     switch (god) {
         case GOD_CERES:
-            city_message_post(1, MESSAGE_BLESSING_FROM_CERES, 0, 0);
+            city_message_post(use_popup, MESSAGE_BLESSING_FROM_CERES, 0, 0);
             building_bless_farms();
             break;
         case GOD_NEPTUNE:
-            city_message_post(1, MESSAGE_BLESSING_FROM_NEPTUNE_ALTERNATE, 0, 0);
+            city_message_post(use_popup, MESSAGE_BLESSING_FROM_NEPTUNE_ALTERNATE, 0, 0);
             city_data.religion.neptune_trade_bonus_active = NEPTUNE_BLESSING_MONTHS;
             break;
         case GOD_MERCURY:
-            city_message_post(1, MESSAGE_BLESSING_FROM_MERCURY_ALTERNATE, 0, 0);
+            city_message_post(use_popup, MESSAGE_BLESSING_FROM_MERCURY_ALTERNATE, 0, 0);
             building_bless_industry();
             break;
         case GOD_MARS:
-            city_message_post(1, MESSAGE_BLESSING_FROM_MARS, 0, 0);
+            city_message_post(use_popup, MESSAGE_BLESSING_FROM_MARS, 0, 0);
             city_data.religion.mars_spirit_power = 10;
             break;
         case GOD_VENUS:
-            city_message_post(1, MESSAGE_BLESSING_FROM_VENUS_ALTERNATE, 0, 0);
+            city_message_post(use_popup, MESSAGE_BLESSING_FROM_VENUS_ALTERNATE, 0, 0);
             city_data.sentiment.blessing_festival_boost += 18;
             city_population_venus_blessing();
             city_data.religion.venus_blessing_months_left = VENUS_BLESSING_MONTHS;

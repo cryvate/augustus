@@ -27,6 +27,17 @@ void city_festival_select_god(int god_id);
 int city_festival_selected_size(void);
 int city_festival_select_size(int size);
 
+int city_festival_auto_enabled(void);
+void city_festival_set_auto_enabled(int enabled);
+
+int city_festival_auto_size(void);
+void city_festival_set_auto_size(int size);
+
+int city_festival_auto_god(void);
+void city_festival_set_auto_god(int god);
+
+int city_god_longest_since_festival(void);
+
 int city_festival_selected_game_id(void);
 int city_festival_games_active(void);
 int city_festival_games_active_venue_type(void);

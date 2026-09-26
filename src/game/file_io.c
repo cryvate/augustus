@@ -1,5 +1,6 @@
 #include "file_io.h"
 
+#include "game/extra_data.h"
 #include "building/barracks.h"
 #include "building/count.h"
 #include "building/granary.h"
@@ -1747,6 +1748,7 @@ int game_file_io_read_saved_game(const char *filename, int offset)
     }
     savegame_load_from_state(&savegame_data.state, save_version);
     clear_savegame_pieces();
+    extra_data_load(filename);
     return 1;
 }
 
@@ -1968,6 +1970,7 @@ int game_file_io_write_saved_game(const char *filename)
     core_memory_block_free(&compress_buffer);
     clear_savegame_pieces();
     file_close(fp);
+    extra_data_save(filename);
     return 1;
 }
 
@@ -1978,5 +1981,7 @@ int game_file_io_delete_saved_game(const char *filename)
     if (!result) {
         log_error("Unable to delete game", 0, 0);
     }
+    extra_data_delete(filename);
+    return result;
     return result;
 }

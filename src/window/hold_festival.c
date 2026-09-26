@@ -8,6 +8,7 @@
 #include "core/image_group.h"
 #include "game/resource.h"
 #include "graphics/button.h"
+#include "graphics/complex_button.h"
 #include "graphics/generic_button.h"
 #include "graphics/graphics.h"
 #include "graphics/image.h"
@@ -118,6 +119,23 @@ static int active_image_buttons(void)
     return city_finance_out_of_money() ? 3 : 4;
 }
 
+static void button_auto_festival_clicked(checkbox_button *button)
+{
+    int new_state = !city_festival_auto_enabled();
+    city_festival_set_auto_enabled(new_state);
+    window_invalidate();
+}
+
+static checkbox_button auto_festival_checkbox = {
+    .x = 82,
+    .y = 192,
+    .width = 180,
+    .height = 20,
+    .left_click_handler = button_auto_festival_clicked,
+    .font = FONT_NORMAL_BLACK,
+    .fill_bg = 0,
+};
+
 static void draw_foreground(void)
 {
     graphics_in_dialog();
@@ -128,6 +146,16 @@ static void draw_foreground(void)
             button_border_draw(82, 276, 477, 26, focus_button_id == 8);
         }
     }
+
+    auto_festival_checkbox.is_checked = (short)city_festival_auto_enabled();
+    static lang_fragment auto_fest_seq[1];
+    auto_fest_seq[0].text = (const uint8_t *)"Auto-Festival";
+    auto_fest_seq[0].text_id = 0;
+    auto_festival_checkbox.sequence = auto_fest_seq;
+    auto_festival_checkbox.sequence_size = 1;
+
+    checkbox_button_draw(&auto_festival_checkbox);
+
     image_buttons_draw(0, 0, image_buttons_bottom, active_image_buttons());
     graphics_reset_dialog();
 }
@@ -139,6 +167,7 @@ static void handle_input(const mouse *m, const hotkeys *h)
     handled |= image_buttons_handle_mouse(m_dialog, 0, 0, image_buttons_bottom, active_image_buttons(),
         &focus_image_button_id);
     handled |= generic_buttons_handle_mouse(m_dialog, 0, 0, buttons_gods_size, 8, &focus_button_id);
+    handled |= checkbox_button_handle_mouse(&auto_festival_checkbox, m_dialog);
     if (focus_image_button_id) {
         focus_button_id = 0;
     }
@@ -178,6 +207,10 @@ static void button_hold_festival(int param1, int param2)
 {
     if (city_finance_out_of_money()) {
         return;
+    }
+    if (city_festival_auto_enabled()) {
+        city_festival_set_auto_size(city_festival_selected_size());
+        city_festival_set_auto_god(city_festival_selected_god());
     }
     city_festival_schedule();
     window_advisors_show();
