@@ -560,7 +560,7 @@ static void draw_extra_info_panel(void)
             int months_since = city_god_months_since_festival(i);
             char fest_buf[12];
             const char *fest_str = sidebar_extra_short_god_festival_months(months_since, fest_buf, sizeof(fest_buf));
-            font_t fest_font = (months_since >= 12) ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
+            font_t fest_font = (months_since > 18) ? FONT_NORMAL_RED : FONT_NORMAL_GREEN;
             int fest_x = mood_x + mood_w + 4;
             int fest_w = text_draw((const uint8_t *) fest_str, fest_x, y_offset, fest_font, 0);
 
