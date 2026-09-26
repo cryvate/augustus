@@ -15,3 +15,4 @@
 - `feature/auto-pause`: Automatically pauses game on dialogs, scenario start, and save load.
 - `feature/autosave-resume`: Periodic 10s & background resume-autosave and startup auto-load system.
 - `feature/sidebar-extra-info`: Optimized sidebar extra info panel layout with compact god mood tracker, festival timer, ratings reasons, and quick action buttons.
+- `feature/save-ini-in-user-dir`: Saves `augustus.ini` and configuration files directly in the user directory (`user_dir`).
