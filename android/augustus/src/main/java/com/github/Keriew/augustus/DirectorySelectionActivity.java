@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 
 import androidx.annotation.NonNull;
@@ -64,10 +62,21 @@ public class DirectorySelectionActivity extends AppCompatActivity {
         });
 
         Button button = findViewById(R.id.directory_selector_button);
-        button.setOnClickListener(v -> directorySelectionLauncher.launch(Uri.EMPTY));
+        button.setOnClickListener(v -> directorySelectionLauncher.launch(getInitialUri()));
 
         if (savedInstanceState == null && getIntent().getBooleanExtra(ARG_SKIP_INSTRUCTIONS, false)) {
-            directorySelectionLauncher.launch(Uri.EMPTY);
+            directorySelectionLauncher.launch(getInitialUri());
         }
+    }
+
+    private Uri getInitialUri() {
+        String path = FileManager.getC3Path();
+        if (!path.isEmpty()) {
+            try {
+                return Uri.parse(path);
+            } catch (Exception ignored) {
+            }
+        }
+        return Uri.EMPTY;
     }
 }
