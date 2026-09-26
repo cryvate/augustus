@@ -23,7 +23,9 @@
 #include "core/io.h"
 #include "core/lang.h"
 #include "core/string.h"
+#include "editor/editor.h"
 #include "empire/city.h"
+#include "graphics/window.h"
 #include "empire/empire.h"
 #include "empire/trade_prices.h"
 #include "figure/enemy_army.h"
@@ -70,6 +72,7 @@
 #include "scenario/distant_battle.h"
 #include "scenario/earthquake.h"
 #include "scenario/emperor_change.h"
+#include "window/city.h"
 #include "scenario/empire.h"
 #include "scenario/event/controller.h"
 #include "scenario/gladiator_revolt.h"
@@ -443,8 +446,46 @@ int game_file_start_scenario_by_name(const uint8_t *scenario_name)
     return start_scenario(scenario_name, get_scenario_filename(scenario_name, "mapx", 1));
 }
 
+static char current_original_save_name[FILE_NAME_MAX] = "";
+
+void game_file_set_original_save_name(const char *filename)
+{
+    if (!filename || !*filename) {
+        return;
+    }
+    const char *basename = file_remove_path(filename);
+    char buf[FILE_NAME_MAX];
+    snprintf(buf, FILE_NAME_MAX, "%s", basename);
+    file_remove_extension(buf);
+
+    const char *prefix = "autosave-resume-";
+    size_t prefix_len = strlen(prefix);
+    if (strncmp(buf, prefix, prefix_len) == 0) {
+        snprintf(current_original_save_name, FILE_NAME_MAX, "%s", buf + prefix_len);
+    } else if (strncmp(buf, "autosave", 8) != 0) {
+        snprintf(current_original_save_name, FILE_NAME_MAX, "%s", buf);
+    }
+}
+
+const char *game_file_get_original_save_name(void)
+{
+    if (strlen(current_original_save_name) > 0) {
+        return current_original_save_name;
+    }
+    const uint8_t *scen_n = scenario_name();
+    if (scen_n && *scen_n) {
+        static char scen_buf[FILE_NAME_MAX];
+        encoding_to_utf8(scen_n, scen_buf, FILE_NAME_MAX, encoding_system_uses_decomposed());
+        if (strlen(scen_buf) > 0) {
+            return scen_buf;
+        }
+    }
+    return "City";
+}
+
 int game_file_load_saved_game(const char *filename)
 {
+    game_file_set_original_save_name(filename);
     game_campaign_suspend();
     int result = game_file_io_read_saved_game(filename, 0);
     if (result != FILE_LOAD_SUCCESS) {
@@ -464,6 +505,9 @@ int game_file_load_saved_game(const char *filename)
 
 int game_file_write_saved_game(const char *filename)
 {
+    if (filename && strncmp(file_remove_path(filename), "autosave-resume-", 16) != 0) {
+        game_file_set_original_save_name(filename);
+    }
     return game_file_io_write_saved_game(filename);
 }
 
@@ -534,4 +578,86 @@ void game_file_write_mission_saved_game(void)
     if (!dir_get_file_at_location(filename, PATH_LOCATION_SAVEGAME)) {
         game_file_io_write_saved_game(dir_append_location(filename, PATH_LOCATION_SAVEGAME));
     }
+}
+
+int game_file_load_latest_save(void)
+{
+    const dir_listing *listing = dir_find_files_with_extension_at_location(PATH_LOCATION_SAVEGAME, "svx");
+    if (!listing || listing->num_files <= 0) {
+        listing = dir_find_files_with_extension_at_location(PATH_LOCATION_SAVEGAME, "sav");
+    }
+    if (!listing || listing->num_files <= 0) {
+        return 0;
+    }
+
+    const dir_entry *best = NULL;
+    for (int i = 0; i < listing->num_files; i++) {
+        const dir_entry *e = &listing->files[i];
+        if (!e->name || strncmp(e->name, "autosave-resume-", 16) != 0) {
+            continue;
+        }
+        if (!best || e->modified_time > best->modified_time) {
+            best = e;
+        }
+    }
+
+    if (best && best->name) {
+        const char *full_path = dir_append_location(best->name, PATH_LOCATION_SAVEGAME);
+        if (game_file_load_saved_game(full_path) == 1) {
+            window_city_show();
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int game_file_write_resume_autosave(void)
+{
+    if (editor_is_active()) {
+        return 0;
+    }
+    window_id id = window_get_id();
+    if (id == WINDOW_LOGO || id == WINDOW_MAIN_MENU ||
+        id == WINDOW_SELECT_CAMPAIGN || id == WINDOW_CONFIG ||
+        id == WINDOW_HOTKEY_CONFIG || id == WINDOW_USER_PATH_SETUP ||
+        id == WINDOW_FILE_DIALOG || id == WINDOW_POPUP_DIALOG ||
+        id == WINDOW_PLAIN_MESSAGE_DIALOG) {
+        return 0;
+    }
+
+    const char *orig_name = game_file_get_original_save_name();
+    char resume_filename[FILE_NAME_MAX];
+    snprintf(resume_filename, FILE_NAME_MAX, "autosave-resume-%s.svx", orig_name);
+
+    const char *full_path = dir_append_location(resume_filename, PATH_LOCATION_SAVEGAME);
+    if (!full_path) {
+        return 0;
+    }
+
+    int result = game_file_io_write_saved_game(full_path);
+
+    if (result) {
+        const dir_listing *listing = dir_find_files_with_extension_at_location(PATH_LOCATION_SAVEGAME, "svx");
+        if (listing) {
+            for (int i = 0; i < listing->num_files; i++) {
+                const dir_entry *e = &listing->files[i];
+                if (e->name && strncmp(e->name, "autosave-resume-", 16) == 0 && strcmp(e->name, resume_filename) != 0) {
+                    const char *del_path = dir_append_location(e->name, PATH_LOCATION_SAVEGAME);
+                    game_file_delete_saved_game(del_path);
+                }
+            }
+        }
+        const dir_listing *listing_sav = dir_find_files_with_extension_at_location(PATH_LOCATION_SAVEGAME, "sav");
+        if (listing_sav) {
+            for (int i = 0; i < listing_sav->num_files; i++) {
+                const dir_entry *e = &listing_sav->files[i];
+                if (e->name && strncmp(e->name, "autosave-resume-", 16) == 0 && strcmp(e->name, resume_filename) != 0) {
+                    const char *del_path = dir_append_location(e->name, PATH_LOCATION_SAVEGAME);
+                    game_file_delete_saved_game(del_path);
+                }
+            }
+        }
+    }
+
+    return result;
 }
