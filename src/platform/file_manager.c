@@ -230,7 +230,7 @@ static struct {
     const char *community_image;
 } paths = {
     "",
-    "config/",
+    "",
     assets_directory,
     "savegames/",
     "scenarios/",
