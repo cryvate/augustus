@@ -402,6 +402,8 @@ int debug_shade = 2;
 
 static void init(void)
 {
+    data.is_scrolling = 0;
+    data.finished_scroll = 0;
     data.selected_button = NO_POSITION; // no button selected
     data.trade_route_anim_start = 0;
     process_selection();
@@ -2802,7 +2804,14 @@ static void handle_input(const mouse *m, const hotkeys *h)
         empire_scroll_map(position.x, position.y);
     }
     if (data.is_scrolling) {
-        if (m->right.went_up) {
+        if (m->is_touch) {
+            const touch *t = touch_get_earliest();
+            if (!t || t->has_ended) {
+                data.is_scrolling = 0;
+                data.finished_scroll = t ? !touch_was_click(t) : 1;
+                scroll_drag_end();
+            }
+        } else if (m->right.went_up) {
             data.finished_scroll = scroll_drag_end();
             data.is_scrolling = 0;
         }
@@ -2947,6 +2956,7 @@ static void handle_input(const mouse *m, const hotkeys *h)
         }
         if (m->right.went_down) {
             scroll_drag_start(0);
+            data.is_scrolling = 1;
         }
         if (m->right.went_up) {
             int has_scrolled = scroll_drag_end();
