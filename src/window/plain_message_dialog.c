@@ -2,6 +2,7 @@
 
 #include "core/image_group.h"
 #include "core/string.h"
+#include "game/state.h"
 #include "graphics/graphics.h"
 #include "graphics/image_button.h"
 #include "graphics/panel.h"
@@ -37,6 +38,7 @@ static int init(translation_key title, translation_key message, int should_draw_
         // don't show popup over popup
         return 0;
     }
+    game_state_pause();
     data.title = translation_for(title);
     data.message = translation_for(message);
     data.draw_underlying_window = should_draw_underlying_window;

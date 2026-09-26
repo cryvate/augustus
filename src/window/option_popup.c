@@ -2,6 +2,7 @@
 
 #include "assets/assets.h"
 #include "core/image_group.h"
+#include "game/state.h"
 #include "graphics/button.h"
 #include "graphics/generic_button.h"
 #include "graphics/graphics.h"
@@ -62,6 +63,7 @@ static int init(int title, int subtitle, option_menu_item *options, int num_opti
         // don't show popup over popup
         return 0;
     }
+    game_state_pause();
     data.num_options = num_options <= MAX_OPTIONS ? num_options : MAX_OPTIONS;
     data.close_func = close_func;
     data.title = title;
