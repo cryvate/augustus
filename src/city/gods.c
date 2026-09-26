@@ -450,6 +450,24 @@ int city_god_happy_bolts(int god_id)
     return city_data.religion.gods[god_id].happy_bolts;
 }
 
+int city_gods_happy_count(void)
+{
+    int count = 0;
+    for (int i = 0; i < MAX_GODS; i++) {
+        count += city_god_happy_bolts(i);
+    }
+    return count;
+}
+
+int city_gods_angry_count(void)
+{
+    int count = 0;
+    for (int i = 0; i < MAX_GODS; i++) {
+        count += city_god_wrath_bolts(i);
+    }
+    return count;
+}
+
 int city_god_months_since_festival(int god_id)
 {
     return city_data.religion.gods[god_id].months_since_festival;

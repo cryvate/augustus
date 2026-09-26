@@ -7,6 +7,9 @@
 
 int sidebar_common_get_x_offset_expanded(void)
 {
+    if (screen_width() > screen_height() && !city_view_is_sidebar_collapsed()) {
+        return screen_width() - 2 * SIDEBAR_EXPANDED_WIDTH;
+    }
     return screen_width() - SIDEBAR_EXPANDED_WIDTH;
 }
 

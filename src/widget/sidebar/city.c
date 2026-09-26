@@ -174,15 +174,37 @@ static void draw_collapsed_background(void)
 
 static void draw_expanded_background(int x_offset)
 {
-    image_draw(image_group(GROUP_SIDE_PANEL) + 1, x_offset, 24, COLOR_MASK_NONE, SCALE_NONE);
-    draw_buttons_expanded(x_offset);
-    draw_overlay_text(x_offset + 4);
-    draw_number_of_messages(x_offset);
-    image_draw(window_build_menu_image(), x_offset + 6, 239, COLOR_MASK_NONE, SCALE_NONE);
-    widget_minimap_update(0);
-    widget_minimap_draw_decorated(x_offset + 8, MINIMAP_Y_OFFSET, MINIMAP_WIDTH, MINIMAP_HEIGHT);
+    if (screen_width() > screen_height()) {
+        int x_offset1 = x_offset;
+        int x_offset2 = x_offset + SIDEBAR_EXPANDED_WIDTH;
 
-    draw_sidebar_remainder(x_offset, 0);
+        // Column 1 (Left column: Minimap, Advisors, Build Buttons)
+        image_draw(image_group(GROUP_SIDE_PANEL) + 1, x_offset1, 24, COLOR_MASK_NONE, SCALE_NONE);
+        draw_buttons_expanded(x_offset1);
+        draw_overlay_text(x_offset1 + 4);
+        draw_number_of_messages(x_offset1);
+        image_draw(window_build_menu_image(), x_offset1 + 6, 239, COLOR_MASK_NONE, SCALE_NONE);
+        widget_minimap_update(0);
+        widget_minimap_draw_decorated(x_offset1 + 8, MINIMAP_Y_OFFSET, MINIMAP_WIDTH, MINIMAP_HEIGHT);
+        sidebar_common_draw_relief(x_offset1, SIDEBAR_FILLER_Y_OFFSET, GROUP_SIDE_PANEL, 0);
+
+        // Column 2 (Right column: Extra Info Panel - Game Speed, Population, Treasury, Gods, Requests, etc.)
+        image_draw(image_group(GROUP_SIDE_PANEL) + 1, x_offset2, 24, COLOR_MASK_NONE, SCALE_NONE);
+        int extra_height = sidebar_extra_draw_background(x_offset2, 24, SIDEBAR_EXPANDED_WIDTH,
+            sidebar_common_get_height(), 0, SIDEBAR_EXTRA_DISPLAY_ALL);
+        sidebar_extra_draw_foreground();
+        sidebar_common_draw_relief(x_offset2, 24 + extra_height, GROUP_SIDE_PANEL, 0);
+    } else {
+        image_draw(image_group(GROUP_SIDE_PANEL) + 1, x_offset, 24, COLOR_MASK_NONE, SCALE_NONE);
+        draw_buttons_expanded(x_offset);
+        draw_overlay_text(x_offset + 4);
+        draw_number_of_messages(x_offset);
+        image_draw(window_build_menu_image(), x_offset + 6, 239, COLOR_MASK_NONE, SCALE_NONE);
+        widget_minimap_update(0);
+        widget_minimap_draw_decorated(x_offset + 8, MINIMAP_Y_OFFSET, MINIMAP_WIDTH, MINIMAP_HEIGHT);
+
+        draw_sidebar_remainder(x_offset, 0);
+    }
 }
 
 void widget_sidebar_city_draw_background(void)
