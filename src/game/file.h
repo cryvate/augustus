@@ -35,6 +35,21 @@ int game_file_start_scenario_by_name(const uint8_t *scenario_name);
 int game_file_load_saved_game(const char *filename);
 
 /**
+ * Load saved game with latest modified timestamp
+ * @return 1 on success, 0 if no save games exist or load failed
+ */
+int game_file_load_latest_save(void);
+
+const char *game_file_get_original_save_name(void);
+void game_file_set_original_save_name(const char *filename);
+
+/**
+ * Write auto-resume save file
+ * @return 1 on success, 0 on failure
+ */
+int game_file_write_resume_autosave(void);
+
+/**
  * Write saved game to disk
  * @param filename File to save to
  * @return Boolean true on success, false on failure

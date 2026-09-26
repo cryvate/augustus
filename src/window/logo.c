@@ -1,6 +1,7 @@
 #include "logo.h"
 
 #include "core/config.h"
+#include "game/file.h"
 #include "graphics/graphics.h"
 #include "graphics/image.h"
 #include "graphics/lang_text.h"
@@ -75,7 +76,9 @@ static void handle_input(const mouse *m, const hotkeys *h)
         return;
     }
     if (m->left.went_up || m->right.went_up) {
-        window_main_menu_show(0);
+        if (!game_file_load_latest_save()) {
+            window_main_menu_show(0);
+        }
         return;
     }
     if (h->escape_pressed) {
