@@ -41,6 +41,21 @@ static FILE *open_pref_file(const char *filename, const char *mode)
     return fp;
 }
 
+#ifdef __ANDROID__
+#define DEFAULT_DATA_DIR "content://com.android.externalstorage.documents/tree/primary%3AManual%2FCaesar%203%2FCaesar3%2FCaesar%203%2FC3"
+#endif
+
+static void save_directory(directory *dir, const char *location)
+{
+    snprintf(dir->location, FILE_NAME_MAX, "%s", location);
+    FILE *fp = open_pref_file(dir->filename, "w");
+    if (fp) {
+        fwrite(location, 1, strlen(location), fp);
+        fclose(fp);
+    }
+    dir->retrieved = 1;
+}
+
 static const char *retrieve_directory(directory *dir)
 {
     if (dir->retrieved) {
@@ -55,18 +70,12 @@ static const char *retrieve_directory(directory *dir)
         }
         dir->retrieved = 1;
     }
-    return dir->location;
-}
-
-static void save_directory(directory *dir, const char *location)
-{
-    snprintf(dir->location, FILE_NAME_MAX, "%s", location);
-    FILE *fp = open_pref_file(dir->filename, "w");
-    if (fp) {
-        fwrite(location, 1, strlen(location), fp);
-        fclose(fp);
+#ifdef DEFAULT_DATA_DIR
+    if (!*dir->location && dir == &prefs.data) {
+        save_directory(dir, DEFAULT_DATA_DIR);
     }
-    dir->retrieved = 1;
+#endif
+    return dir->location;
 }
 
 const char *pref_data_dir(void)
