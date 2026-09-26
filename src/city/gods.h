@@ -23,6 +23,9 @@ int city_god_wrath_bolts(int god_id);
 
 int city_god_happy_bolts(int god_id);
 
+int city_gods_happy_count(void);
+int city_gods_angry_count(void);
+
 int city_god_months_since_festival(int god_id);
 
 /**

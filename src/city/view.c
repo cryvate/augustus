@@ -598,7 +598,11 @@ static void set_viewport(int x_offset, int y_offset, int width, int height)
 
 static void set_viewport_with_sidebar(void)
 {
-    set_viewport(0, TOP_MENU_HEIGHT, data.screen_width - 160, data.screen_height - TOP_MENU_HEIGHT);
+    int sidebar_width = 160;
+    if (data.screen_width > data.screen_height) {
+        sidebar_width = 324;
+    }
+    set_viewport(0, TOP_MENU_HEIGHT, data.screen_width - sidebar_width, data.screen_height - TOP_MENU_HEIGHT);
 }
 
 static void set_viewport_without_sidebar(void)

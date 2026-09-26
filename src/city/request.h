@@ -13,6 +13,8 @@ enum {
 #define CITY_REQUEST_MAX_ACTIVE 5
 
 int city_request_has_troop_request(void);
+int city_request_troop_request_force_size(void);
+int city_request_troop_request_months_left(void);
 int city_request_get_status(int index);
 int city_get_request_resource(int index);
 
