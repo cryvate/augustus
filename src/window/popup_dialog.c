@@ -3,6 +3,7 @@
 #include "core/image_group.h"
 #include "core/lang.h"
 #include "core/string.h"
+#include "game/state.h"
 #include "graphics/generic_button.h"
 #include "graphics/graphics.h"
 #include "graphics/image_button.h"
@@ -52,6 +53,7 @@ static int init(const uint8_t *custom_title, const uint8_t *custom_text,
         // don't show popup over popup
         return 0;
     }
+    game_state_pause();
     data.ok_clicked = 0;
     data.close_func = close_func;
     data.has_buttons = has_ok_cancel_buttons;

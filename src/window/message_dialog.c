@@ -12,6 +12,7 @@
 #include "empire/city.h"
 #include "figure/formation.h"
 #include "game/settings.h"
+#include "game/state.h"
 #include "graphics/complex_button.h"
 #include "graphics/graphics.h"
 #include "graphics/image.h"
@@ -971,6 +972,7 @@ static void init_window(int text_id, int is_custom_message, void (*background_ca
         get_tooltip
     };
     init(text_id, is_custom_message, background_callback);
+    game_state_pause();
     window_show(&window);
 }
 

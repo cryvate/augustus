@@ -146,6 +146,7 @@ static void button_click(const generic_button *button)
 
 void window_pause_menu_show(void)
 {
+    game_state_pause();
     window_type window = {
             WINDOW_CITY_MAIN_MENU,
             window_draw_underlying_window,
